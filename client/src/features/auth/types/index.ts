@@ -15,7 +15,9 @@ export interface User {
   role: Role;
   isActive: boolean;
   createdAt: string;
+  failedLoginAttempts?: number;
 }
+
 
 export interface AuthSession {
   user: User;

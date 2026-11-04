@@ -67,11 +67,15 @@ export const RegisterForm = ({
         password,
       });
 
-      // Show success message briefly before redirecting
-      setSuccessMessage('¡Cuenta de organización creada exitosamente! Redirigiendo...');
-      setTimeout(() => {
-        onSuccess(session);
-      }, 1200);
+      // Show success message without auto login
+      setSuccessMessage('¡Cuenta de organización creada exitosamente!');
+      // Reset form fields
+      setOrganizationName('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setIsLoading(false);
+
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -127,7 +131,19 @@ export const RegisterForm = ({
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span>{successMessage}</span>
+            <span>
+              {successMessage}
+              <br />
+              Ya puedes
+              <button
+                type="button"
+                onClick={onNavigateToLogin}
+                className="font-medium ml-1 text-red-600 hover:underline cursor-pointer transition-colors"
+              >
+                iniciar sesión.
+              </button>
+            </span>
+
           </div>
         )}
 
@@ -226,7 +242,7 @@ export const RegisterForm = ({
 
           <button
             type="submit"
-            disabled={isLoading || !!successMessage}
+            disabled={isLoading}
             className="w-full mt-2 py-2.5 px-4 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-medium text-sm rounded-md shadow-xs transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
           >
             {isLoading ? (

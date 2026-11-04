@@ -17,22 +17,49 @@ export const loginUser = async (data: LoginDTO): Promise<AuthSession> => {
   }
 
   const user = storage.findUserByEmail(trimmedEmail);
-  if (!user || user.password !== password) {
+
+  // If user not found, return generic error (no lockout tracking)
+  if (!user) {
     throw new Error('Credenciales inválidas. Verifica tu correo y contraseña.');
   }
 
+  // Account lockout: after 5 failed attempts we set isActive to false
   if (!user.isActive) {
-    throw new Error('Tu cuenta se encuentra inactiva. Contacta al administrador.');
+    throw new Error('Cuenta inhabilitada por múltiples intentos fallidos. Contacta al administrador.');
   }
+
+  if (user.password !== password) {
+    // Increment failed attempts
+    const attempts = (user.failedLoginAttempts ?? 0) + 1;
+    const shouldDeactivate = attempts >= 5;
+    const updatedUser: User = {
+      ...user,
+      failedLoginAttempts: attempts,
+      isActive: shouldDeactivate ? false : true,
+    };
+    storage.saveUser(updatedUser);
+
+    if (shouldDeactivate) {
+      throw new Error('Demasiados intentos fallidos. La cuenta ha sido desactivada.');
+    }
+    throw new Error('Credenciales inválidas. Verifica tu correo y contraseña.');
+  }
+
+  // Successful login: reset counters and ensure active
+  const updatedUser: User = {
+    ...user,
+    failedLoginAttempts: 0,
+    isActive: true,
+  };
+  storage.saveUser(updatedUser);
 
   const organization = storage.getOrganizationById(user.organizationId);
 
-  storage.setCurrentUser(user);
+  storage.setCurrentUser(updatedUser);
   storage.setCurrentOrganization(organization);
 
   return {
-    user,
+    user: updatedUser,
     organization: organization!,
   };
 };
-
