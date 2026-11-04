@@ -15,6 +15,7 @@ export const RegisterForm = ({
   const [organizationName, setOrganizationName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -37,6 +38,16 @@ export const RegisterForm = ({
 
     if (!password) {
       setError('Por favor, ingresa una contraseña.');
+      return;
+    }
+
+    if (!confirmPassword) {
+      setError('Por favor, confirma tu contraseña.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Las contraseñas no coinciden. Por favor, verifica e inténtalo nuevamente.');
       return;
     }
 
@@ -194,6 +205,23 @@ export const RegisterForm = ({
             <p className="text-[11px] text-gray-500 mt-1 leading-tight">
               Mínimo 8 caracteres, con al menos una mayúscula, una minúscula, un número y un carácter especial.
             </p>
+          </div>
+
+          <div>
+            <label
+              htmlFor="confirmPassword"
+              className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1"
+            >
+              Confirmar Contraseña
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-md shadow-xs focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-colors"
+            />
           </div>
 
           <button
