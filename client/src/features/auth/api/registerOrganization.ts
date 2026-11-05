@@ -57,7 +57,7 @@ export const registerOrganization = async (
     name: trimmedOrgName,
     email: trimmedEmail,
     password: data.password,
-    role: 'ORGANIZATION',
+    role: 'ORGANIZACION',
     isActive: true,
     createdAt: now,
   };

@@ -23,9 +23,9 @@ export const loginUser = async (data: LoginDTO): Promise<AuthSession> => {
     throw new Error('Credenciales inválidas. Verifica tu correo y contraseña.');
   }
 
-  // Account lockout: after 5 failed attempts we set isActive to false
+  // Check if account is inactive / inhabilitada
   if (!user.isActive) {
-    throw new Error('Cuenta inhabilitada por múltiples intentos fallidos. Contacta al administrador.');
+    throw new Error('La cuenta está inhabilitada. Contacta al administrador.');
   }
 
   if (user.password !== password) {
