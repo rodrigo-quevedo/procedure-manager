@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { RegisterForm, LoginForm } from '@/features/auth';
 import type { AuthSession, Organization, User } from '@/features/auth';
 import { OrganizationDashboard } from '@/components/OrganizationDashboard';
+import { MemberDashboard } from '@/components/MemberDashboard';
 import { storage } from '@/services/storage';
 
 type AuthView = 'register' | 'login';
@@ -13,7 +14,6 @@ export function App() {
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    // Check if there is an active session in localStorage
     const savedUser = storage.getCurrentUser();
     const savedOrg = storage.getCurrentOrganization();
 
@@ -43,9 +43,21 @@ export function App() {
     );
   }
 
+  // Routing by role after authentication
   if (currentUser) {
+    if (currentUser.role === 'ORGANIZACION') {
+      return (
+        <OrganizationDashboard
+          user={currentUser}
+          organization={currentOrganization}
+          onLogout={handleLogout}
+        />
+      );
+    }
+
+    // LIDER or DESARROLLADOR
     return (
-      <OrganizationDashboard
+      <MemberDashboard
         user={currentUser}
         organization={currentOrganization}
         onLogout={handleLogout}
