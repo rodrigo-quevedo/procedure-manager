@@ -9,6 +9,7 @@ import {
   getMembers,
   toggleMemberStatus,
 } from '@/features/members';
+import { ProjectsPanel } from '@/features/projects';
 
 interface OrganizationDashboardProps {
   user: User;
@@ -16,7 +17,7 @@ interface OrganizationDashboardProps {
   onLogout: () => void;
 }
 
-type TabType = 'OVERVIEW' | 'MEMBERS';
+type TabType = 'OVERVIEW' | 'MEMBERS' | 'PROJECTS';
 
 export const OrganizationDashboard = ({
   user,
@@ -122,7 +123,7 @@ export const OrganizationDashboard = ({
             </span>
           </div>
 
-          <nav className="hidden sm:flex items-center gap-1">
+          <nav className="flex flex-wrap items-center gap-1">
             <button
               type="button"
               onClick={() => {
@@ -137,6 +138,21 @@ export const OrganizationDashboard = ({
               }`}
             >
               Gestión de Miembros
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('PROJECTS');
+                setSelectedMember(null);
+                setIsCreatingMember(false);
+              }}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                activeTab === 'PROJECTS'
+                  ? 'bg-red-50 text-red-700'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              Proyectos
             </button>
             <button
               type="button"
@@ -237,6 +253,14 @@ export const OrganizationDashboard = ({
               </div>
             </div>
           </div>
+        )}
+
+        {activeTab === 'PROJECTS' && organization && (
+          <ProjectsPanel
+            organizationId={organization.id}
+            actor={user}
+            onSuccess={showSuccessFeedback}
+          />
         )}
 
         {/* Tab 2: Members Management (HU-003 & HU-004) */}
