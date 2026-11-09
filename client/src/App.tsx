@@ -7,6 +7,7 @@ import { MemberDashboard } from '@/components/MemberDashboard';
 import { storage } from '@/services/storage';
 import { DeviationView } from './examples/Deviation';
 import { EvaluationView } from './examples/Evaluation';
+import { ProcedureSearchAndFilter } from './examples/ProcedureFIlter';
 
 type AuthView = 'register' | 'login';
 
@@ -86,7 +87,9 @@ export function App() {
 
   // return <ExampleComponent />;
   // return <DeviationView />;
-  return <EvaluationView />;
+  // return <EvaluationView />;
+  return <ProcedureSearchAndFilter />;
+
 
 }
 
