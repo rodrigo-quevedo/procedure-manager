@@ -6,6 +6,7 @@ import { OrganizationDashboard } from '@/components/OrganizationDashboard';
 import { MemberDashboard } from '@/components/MemberDashboard';
 import { storage } from '@/services/storage';
 import { DeviationView } from './examples/Deviation';
+import { EvaluationView } from './examples/Evaluation';
 
 type AuthView = 'register' | 'login';
 
@@ -83,8 +84,9 @@ export function App() {
   //   </div>
   // );
 
-  return <ExampleComponent />;
+  // return <ExampleComponent />;
   // return <DeviationView />;
+  return <EvaluationView />;
 
 }
 
