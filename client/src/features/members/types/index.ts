@@ -1,25 +1,27 @@
-import type { Role, User } from '@/features/auth/types';
+// import type { Role, User } from '@/features/auth/types';
 
-export type MemberRole = 'LIDER' | 'DESARROLLADOR';
+// export type MemberRole = 'LIDER' | 'DESARROLLADOR';
 
-export interface Member extends User {
-  role: Role;
-}
+// export interface Member extends User {
+//   role: Role;
+// }
 
-export interface CreateMemberDTO {
-  name: string;
-  email: string;
-  password: string;
-  role: MemberRole;
-}
+// export interface CreateMemberDTO {
+//   name: string;
+//   email: string;
+//   password: string;
+//   role: MemberRole;
+// }
 
-export interface UpdateMemberDTO {
-  id: string;
-  name: string;
-  email: string;
-  password?: string;
-  role: MemberRole;
-}
+// export interface UpdateMemberDTO {
+//   id: string;
+//   name: string;
+//   email: string;
+//   password?: string;
+//   role: MemberRole;
+// }
+
+
 /**
  * Supported user role codes within the system.
  * Determines permissions, access levels, and dashboard views.
@@ -62,6 +64,18 @@ export interface User {
 }
 
 /**
+ * Structure of the decoded payload inside the JWT token.
+ * Useful for client-side token parsing (e.g., via jwt-decode).
+ */
+export interface JWTPayload {
+  sub: number; // Subject (User ID: idUser)
+  email: string;
+  role: RoleCode;
+  iat: number; // Issued At timestamp
+  exp: number; // Expiration timestamp
+}
+
+/**
  * Data Transfer Object (DTO) for initial Organization account registration (HU-001).
  */
 export interface RegisterOrganizationDTO {
@@ -80,10 +94,21 @@ export interface LoginCredentialsDTO {
 }
 
 /**
- * Active authenticated session structure stored in memory / localStorage.
+ * Response payload returned by the Backend API upon successful login or token refresh.
+ */
+export interface AuthTokenResponse {
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn: number; // Expiration time in seconds
+  user: Omit<User, 'passwordHash'>;
+}
+
+/**
+ * Active authenticated session structure stored in client memory or state context.
  */
 export interface AuthSession {
-  user: Omit<User, 'passwordHash'>; // Excludes password hash for security on the client side
+  user: Omit<User, 'passwordHash'>;
   token: string;
-  loginTimestamp: string;
+  refreshToken?: string;
+  expiresAt: number; // Timestamp when token expires
 }
