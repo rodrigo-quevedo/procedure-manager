@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { RegisterForm, LoginForm } from '@/features/auth';
+import { ExampleComponent } from '@/examples/ExampleComponent';
 import type { AuthSession, Organization, User } from '@/features/auth';
 import { OrganizationDashboard } from '@/components/OrganizationDashboard';
 import { MemberDashboard } from '@/components/MemberDashboard';
@@ -44,42 +45,43 @@ export function App() {
   }
 
   // Routing by role after authentication
-  if (currentUser) {
-    if (currentUser.role === 'ORGANIZACION') {
-      return (
-        <OrganizationDashboard
-          user={currentUser}
-          organization={currentOrganization}
-          onLogout={handleLogout}
-        />
-      );
-    }
+  // if (currentUser) {
+  //   if (currentUser.role === 'ORGANIZACION') {
+  //     return (
+  //       <OrganizationDashboard
+  //         user={currentUser}
+  //         organization={currentOrganization}
+  //         onLogout={handleLogout}
+  //       />
+  //     );
+  //   }
 
-    // LIDER or DESARROLLADOR
-    return (
-      <MemberDashboard
-        user={currentUser}
-        organization={currentOrganization}
-        onLogout={handleLogout}
-      />
-    );
-  }
+  //   // LIDER or DESARROLLADOR
+  //   return (
+  //     <MemberDashboard
+  //       user={currentUser}
+  //       organization={currentOrganization}
+  //       onLogout={handleLogout}
+  //     />
+  //   );
+  // }
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
-      {currentAuthView === 'register' ? (
-        <RegisterForm
-          onSuccess={handleAuthSuccess}
-          onNavigateToLogin={() => setCurrentAuthView('login')}
-        />
-      ) : (
-        <LoginForm
-          onSuccess={handleAuthSuccess}
-          onNavigateToRegister={() => setCurrentAuthView('register')}
-        />
-      )}
-    </div>
-  );
+  // return (
+  //   <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+  //     {currentAuthView === 'register' ? (
+  //       <RegisterForm
+  //         onSuccess={handleAuthSuccess}
+  //         onNavigateToLogin={() => setCurrentAuthView('login')}
+  //       />
+  //     ) : (
+  //       <LoginForm
+  //         onSuccess={handleAuthSuccess}
+  //         onNavigateToRegister={() => setCurrentAuthView('register')}
+  //       />
+  //     )}
+  //   </div>
+  // );
+  return <ExampleComponent />;
 }
 
 export default App;
