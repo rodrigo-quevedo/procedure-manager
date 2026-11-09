@@ -161,13 +161,13 @@ export const CreationAndExecutionView: React.FC = () => {
 
 
                         {/* Campo 1 */}
-                        <div className="border border-gray-100 rounded p-4 mb-4">
-                            <div className="text-xs font-bold uppercase tracking-wider mb-2">
+                        <div className="border border-gray-100 rounded p-4">
+                            <div className="text-xs font-medium uppercase tracking-wider mb-2">
                                 Variables de Entorno
                             </div>
 
                             {/* Campo 1 */}
-                            <div className="mb-4">
+                            <div className="">
                                 <div className="inline-flex items-center gap-1.5 max-w-full mb-1">
                                     <label className="text-xs font-medium text-gray-700">
                                         Especificar clave JWT: Ingresar la clave de firma token en la consola.
@@ -225,17 +225,17 @@ export const CreationAndExecutionView: React.FC = () => {
                         </div>
 
                         {/* HR + Botón "+ Crear Campo" en el bottom del box Configurar Entorno */}
-                        {/* <div className="relative  mb-1 flex items-center justify-center">
+                        <div className="relative flex items-center justify-center">
                             <div className="absolute inset-0 flex items-center">
                                 <div className="w-full border-t border-red-200"></div>
                             </div>
                             <button
                                 type="button"
-                                className="relative z-10 inline-flex items-center gap-1 bg-white hover:bg-gray-50 border border-red-300 hover:border-red-400 text-gray-600 hover:text-red-600 px-3 py-1 rounded-full text-xs font-semibold shadow-2xs transition-all active:scale-95"
+                                className="relative z-10 inline-flex items-center gap-1 bg-white hover:bg-gray-50 border border-red-300 hover:border-red-400 text-gray-600 hover:text-red-600 px-2 rounded-full text-[10px] font-semibold shadow-2xs transition-all active:scale-95"
                             >
-                                <span className="text-red-600 font-bold">+</span>
+                                <span className="text-red-600 font-bold">+</span> Crear campo
                             </button>
-                        </div> */}
+                        </div>
                     </div>
 
                 </div>
