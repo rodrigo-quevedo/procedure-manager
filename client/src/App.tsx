@@ -5,6 +5,7 @@ import type { AuthSession, Organization, User } from '@/features/auth';
 import { OrganizationDashboard } from '@/components/OrganizationDashboard';
 import { MemberDashboard } from '@/components/MemberDashboard';
 import { storage } from '@/services/storage';
+import { DeviationView } from './examples/Deviation';
 
 type AuthView = 'register' | 'login';
 
@@ -81,7 +82,10 @@ export function App() {
   //     )}
   //   </div>
   // );
+
   return <ExampleComponent />;
+  // return <DeviationView />;
+
 }
 
 export default App;

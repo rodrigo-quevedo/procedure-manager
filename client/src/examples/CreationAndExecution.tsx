@@ -18,41 +18,83 @@ export const CreationAndExecutionView: React.FC = () => {
 
                     {/* Navegación de Pasos: Rectángulo contenedor con números redondeados en rojo principal */}
                     <div className="mb-6">
-                        <label className="block text-xs font-bold text-gray-700 tracking-wider mb-2">
-                            Navegación
-                        </label>
-                        <div className="p-3 bg-white border border-gray-200 rounded-sm shadow-inner">
-                            <div className="flex flex-wrap gap-2.5 items-center">
-                                {steps.map((num) => {
-                                    const isSelected = selectedStep === num;
-                                    return (
-                                        <button
-                                            key={num}
-                                            onClick={() => setSelectedStep(num)}
-                                            className={`w-7 h-8 rounded-sm flex items-center justify-center font-bold text-sm transition-all shadow-sm ${isSelected
-                                                ? 'bg-red-600 text-white scale-105'
-                                                : 'bg-red-700 text-white hover:bg-red-700 hover:scale-105 opacity-90 hover:opacity-100'
-                                                }`}
-                                        >
-                                            {num}
-                                        </button>
-                                    );
-                                })}
+                            <label className="block text-xs font-bold text-red-600 tracking-wider mb-2">
+                                Navegación
+                            </label>
+                            <div className="p-3 bg-white border border-gray-200 rounded-sm shadow-inner">
+                                <div className="flex flex-wrap gap-2.5 items-center">
+                                    {steps.map((num) => {
+                                        const isSelected = selectedStep === num;
+                                        return (
+                                            <button
+                                                key={num}
+                                                onClick={() => setSelectedStep(num)}
+                                                className={`w-7 h-8 rounded-sm flex items-center justify-center font-bold text-sm transition-all shadow-sm ${isSelected
+                                                    ? 'bg-red-600 text-white scale-105'
+                                                    : 'bg-red-700 text-white hover:bg-red-700 hover:scale-105 opacity-90 hover:opacity-100'
+                                                    }`}
+                                            >
+                                                {num}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Contenedor de pasos existentes */}
+                            {/* Contenedor de pasos existentes */}
                     </div>
 
                     {/* Selección de Proyecto abajo del rectángulo de pasos */}
+                    <div className="mb-4">
+                            <label className="block text-xs font-bold text-red-600 uppercase tracking-wider mb-1">
+                                Proyecto Asignado
+                            </label>
+                            <select className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 shadow-sm">
+                                <option>Sistema de Gestión de Pagos</option>
+                                <option>API Gateway Principal</option>
+                            </select>
+                    </div>
+
+                    {/* Nombre del Procedimiento con icono de edición */}
+                    <div className="mb-4">
+                            <label className="block text-xs font-bold text-red-600 uppercase tracking-wider mb-1">
+                                NOMBRE
+                            </label>
+                            <div className="inline-flex items-center gap-1.5 max-w-full">
+                                <span className="text-xs font-semibold text-gray-800 leading-snug">
+                                    Despliegue de Microservicio Auth
+                                </span>
+                                <button
+                                    type="button"
+                                    title="Editar nombre"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded p-0.5 transition-all flex-shrink-0"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                </button>
+                            </div>
+                    </div>
+
+                    {/* Descripción del Procedimiento con icono de edición */}
                     <div className="mb-6">
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                            Proyecto Asignado
-                        </label>
-                        <select className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 shadow-sm">
-                            <option>Sistema de Gestión de Pagos</option>
-                            <option>API Gateway Principal</option>
-                        </select>
+                            <label className="block text-xs font-bold text-red-600 uppercase tracking-wider mb-1">
+                                DESCRIPCIÓN
+                            </label>
+                            <div className="inline-flex items-start gap-1.5 max-w-full">
+                                <p className="text-xs text-gray-600 leading-snug">
+                                    Procedimiento para desplegar en staging las dependencias del módulo Auth
+                                </p>
+                                <button
+                                    type="button"
+                                    title="Editar descripción"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded p-0.5 transition-all flex-shrink-0 mt-0.5"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                </button>
+                            </div>
                     </div>
                 </div>
 
@@ -71,9 +113,31 @@ export const CreationAndExecutionView: React.FC = () => {
                 <div className="mb-6 border-b border-gray-100 pb-5">
                     {/* Fila superior: Etiqueta Paso y Botones de acción */}
                     <div className="flex items-center justify-between mb-3">
-                        <span className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-bold font-mono border border-red-200 shadow-sm">
-                            Paso {selectedStep}
-                        </span>
+                        <div className="flex items-center gap-2.5">
+                            <span className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-bold font-mono border border-red-200 shadow-sm">
+                                Paso {selectedStep}
+                            </span>
+                            <button
+                                type="button"
+                                title="Pausar procedimiento"
+                                className="inline-flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-700 hover:text-amber-800 px-2.5 py-1 rounded-md text-xs font-semibold shadow-xs transition-all active:scale-95"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Pausar
+                            </button>
+                            <button
+                                type="button"
+                                title="Cancelar procedimiento"
+                                className="inline-flex items-center gap-1.5 bg-gray-100 hover:bg-red-50 border border-gray-300 hover:border-red-300 text-gray-600 hover:text-red-600 px-2.5 py-1 rounded-md text-xs font-semibold shadow-xs transition-all active:scale-95"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Cancelar
+                            </button>
+                        </div>
 
                         <div className="flex items-center gap-2.5">
                             <button
@@ -117,23 +181,23 @@ export const CreationAndExecutionView: React.FC = () => {
 
                     {/* Campo Descripción con Label e Icono de edición pegado al texto */}
                     <div>
-                        <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
-                            Descripción
-                        </label>
-                        <div className="inline-flex items-center gap-2 max-w-full">
-                            <span className="text-sm text-gray-600 outline-none">
-                                Procedimiento para desplegar en staging las dependencias del módulo Auth
-                            </span>
-                            <button
-                                type="button"
-                                title="Editar descripción"
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded p-1 transition-all flex-shrink-0"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                </svg>
-                            </button>
-                        </div>
+                            <label className="block text-xs font-bold text-red-600 uppercase tracking-wider mb-1">
+                                Descripción
+                            </label>
+                            <div className="inline-flex items-center gap-2 max-w-full">
+                                <span className="text-sm text-gray-600 outline-none">
+                                    Procedimiento para desplegar en staging las dependencias del módulo Auth
+                                </span>
+                                <button
+                                    type="button"
+                                    title="Editar descripción"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded p-1 transition-all flex-shrink-0"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                </button>
+                            </div>
                     </div>
                 </div>
 
