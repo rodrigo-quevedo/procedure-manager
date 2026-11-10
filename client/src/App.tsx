@@ -9,6 +9,7 @@ import { DeviationView } from './examples/Deviation';
 import { EvaluationView } from './examples/Evaluation';
 import { ProcedureSearchAndFilter } from './examples/ProcedureFIlter';
 import { ExecutionManagementMock } from './examples/ExecutionManagement';
+import EvaluationManagement from './examples/EvaluationManagement';
 
 type AuthView = 'register' | 'login';
 
@@ -90,7 +91,8 @@ export function App() {
   // return <DeviationView />;
   // return <EvaluationView />;
   // return <ProcedureSearchAndFilter />;
-  return <ExecutionManagementMock />;
+  // return <ExecutionManagementMock />;
+  return <EvaluationManagement />;
 
 
 }
