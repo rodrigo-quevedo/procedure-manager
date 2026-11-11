@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react';
 import { RegisterForm, LoginForm } from '@/features/auth';
+import { ExampleComponent } from '@/examples/ExampleComponent';
 import type { AuthSession, Organization, User } from '@/features/auth';
 import { OrganizationDashboard } from '@/components/OrganizationDashboard';
 import { MemberDashboard } from '@/components/MemberDashboard';
 import { storage } from '@/services/storage';
+import { DeviationView } from './examples/Deviation';
+import { EvaluationView } from './examples/Evaluation';
+import { ProcedureSearchAndFilter } from './examples/ProcedureFIlter';
+import { ExecutionManagementMock } from './examples/ExecutionManagement';
+import EvaluationManagement from './examples/EvaluationManagement';
 
 type AuthView = 'register' | 'login';
 
@@ -80,6 +86,8 @@ export function App() {
       )}
     </div>
   );
+
+
 }
 
 export default App;
