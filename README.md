@@ -1,7 +1,7 @@
-# Sistema de Gestión, Ejecución y Trazabilidad de Procedimientos de Desarrollo de Software
-# Software Development Procedures Management, Execution, and Traceability System
-
 > 🌐 **Idioma / Language:** [🇪🇸 Español](#-español) | [🇬🇧 English](#-english)
+
+# Sistema de Gestión, Ejecución y Trazabilidad de Procedimientos de Desarrollo de Software
+
 
 ---
 
@@ -149,9 +149,10 @@ Queda estrictamente prohibida la reproducción, copia, distribución, modificaci
 
 ---
 ---
+# Software Development Procedures Management, Execution, and Traceability System
 
 <a name="-english"></a>
-## 🇬🇧 English
+## 🇺🇸 English
 
 Functional web application prototype developed as a Final Degree Project (Software Engineering - Universidad Siglo 21) by **Rodrigo Martín Quevedo**.
 
