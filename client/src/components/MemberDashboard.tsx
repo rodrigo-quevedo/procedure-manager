@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { storage } from '@/services/storage';
 import type { Organization, User } from '@/features/auth/types';
 import { getMembers } from '@/features/members';
-import { getProjects, ProjectsPanel, type Project } from '@/features/projects';
+import { getProjects, ProjectsPanel, type ClientProject as Project } from '@/features/projects';
 
 interface MemberDashboardProps {
   user: User;

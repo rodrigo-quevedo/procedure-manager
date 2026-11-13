@@ -1,5 +1,5 @@
-import type { Organization, User } from '@/features/auth/types';
-import type { Project } from '@/features/projects/types';
+import type { User, Organization } from '@/features/auth/types';
+import type { ClientProject } from '@/features/projects/types';
 
 const STORAGE_KEYS = {
   ORGANIZATIONS: 'pm_organizations',
@@ -96,11 +96,11 @@ export const storage = {
     localStorage.removeItem(STORAGE_KEYS.CURRENT_ORGANIZATION);
   },
 
-  getProjects(): Project[] {
-    return safeParse<Project[]>(localStorage.getItem(STORAGE_KEYS.PROJECTS), []);
+  getProjects(): ClientProject[] {
+    return safeParse<ClientProject[]>(localStorage.getItem(STORAGE_KEYS.PROJECTS), []);
   },
 
-  saveProject(project: Project): void {
+  saveProject(project: ClientProject): void {
     const projects = storage.getProjects();
     const existingIndex = projects.findIndex((item) => item.id === project.id);
     if (existingIndex >= 0) {
@@ -111,8 +111,7 @@ export const storage = {
     localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
   },
 
-  getProjectsByOrganization(organizationId: string): Project[] {
+  getProjectsByOrganization(organizationId: string): ClientProject[] {
     return storage.getProjects().filter((project) => project.organizationId === organizationId);
   },
 };
-

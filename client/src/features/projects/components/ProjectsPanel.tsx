@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { User } from '@/features/auth/types';
 import { getMembers } from '@/features/members';
 import { getProjects } from '../api/getProjects';
-import type { Project } from '../types';
+import type { ClientProject as Project } from '../types';
 import { ProjectDetail } from './ProjectDetail';
 import { ProjectForm } from './ProjectForm';
 import { ProjectList } from './ProjectList';

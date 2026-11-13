@@ -1,5 +1,5 @@
 import type { User } from '@/features/auth/types';
-import type { Project } from '../types';
+import type { ClientProject } from '../types';
 
 function normalizeText(value: string): string {
   return value
@@ -45,7 +45,7 @@ function fieldMatchesToken(token: string, field: string): boolean {
 }
 
 export function projectMatchesQuery(
-  project: Project,
+  project: ClientProject,
   participants: User[],
   query: string,
 ): boolean {
@@ -61,7 +61,7 @@ export function projectMatchesQuery(
   return tokens.every((token) => fields.some((field) => fieldMatchesToken(token, field)));
 }
 
-export function projectParticipants(project: Project, directory: User[]): User[] {
+export function projectParticipants(project: ClientProject, directory: User[]): User[] {
   const assignedIds = new Set([...project.leaderIds, ...project.memberIds]);
   return directory.filter((person) => assignedIds.has(person.id));
 }

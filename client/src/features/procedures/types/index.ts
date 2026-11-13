@@ -1,130 +1,56 @@
 /**
- * Supported field types within procedure sections.
- * Corresponds to the CHECK constraint in the database ('TEXT', 'CODE', 'IMAGE').
+ * Procedure types for the client.
+ *
+ * Re-exports all shared procedure types from @shared/types so the rest
+ * of the client imports from a single, stable location.
+ *
+ * MIGRATION NOTE: This module previously declared its own copies of
+ * Procedure, Step, Section, Field, etc.  Those duplicates have been
+ * removed; the shared definitions (shared/types/procedures.ts) are now
+ * the single source of truth for the entire codebase.
  */
-export type FieldType = 'TEXT' | 'CODE' | 'IMAGE';
+export type {
+  ProcedureState,
+  FieldType,
+  TraceableElement,
+  Procedure,
+  ProcedureCategory,
+  Step,
+  Section,
+  Field,
+  CreateFieldDTO,
+  CreateSectionDTO,
+  CreateStepDTO,
+  CreateProcedureDTO,
+} from '@shared/types';
 
-/**
- * UI display labels for field types in Spanish.
- */
-export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
-    TEXT: 'Texto',
-    CODE: 'Código',
-    IMAGE: 'Imagen',
-};
+export { FIELD_TYPE_LABELS } from '@shared/types';
 
-/**
- * Represents the PROCEDURES entity / table.
- * Acts as the base standard procedure template linked to a specific project.
- */
-export interface Procedure {
-    idProcedure: number;
-    idProject: number;
-    idCreator: number; // User ID of the creator (Organization or Leader)
-    idLeaderApprover?: number; // Optional User ID of approving Leader
-    idPreviousVersion?: number; // Self-referencing FK for deviation traceability
-    name: string;
-    description: string;
-    createdAt: string; // ISO Datetime string (e.g., "2026-11-08T19:00:00Z")
-    tags?: string[]; // Array of tag names for UI filtering (e.g., ["Backend", "Seguridad", "CI/CD"])
-}
+// ---------------------------------------------------------------------------
+// Client-only composite view models (not part of the shared contract)
+// ---------------------------------------------------------------------------
 
-/**
- * Represents a single procedure category tag.
- * Corresponds to the CATEGORIAS_PROCEDIMIENTO table in the database.
- */
-export interface ProcedureCategory {
-    idProcedure: number;
-    name: string;
-}
+import type { Step, Section, Field } from '@shared/types';
 
-/**
- * Represents the STEPS entity / table.
- * Defines sequential ordered steps contained within a procedure.
- */
-export interface Step {
-    idStep: number;
-    idProcedure: number;
-    name: string;
-    description: string;
-    order: number;
-}
-
-/**
- * Represents the SECTIONS entity / table.
- * Structural grouping of fields inside a procedure step.
- */
-export interface Section {
-    idSection: number;
-    idStep: number;
-    name: string;
-    description: string;
-}
-
-/**
- * Represents the FIELDS entity / table.
- * Individual input definition inside a section with typed dynamic content.
- */
-export interface Field {
-    idField: number;
-    idSection: number;
-    fieldType: FieldType;
-    content: string;
-}
-
-/**
- * Data Transfer Object (DTO) for creating a new Field within a Section.
- */
-export interface CreateFieldDTO {
-    fieldType: FieldType;
-    content: string;
-}
-
-/**
- * Data Transfer Object (DTO) for creating a new Section inside a Step.
- */
-export interface CreateSectionDTO {
-    name: string;
-    description: string;
-    fields?: CreateFieldDTO[];
-}
-
-/**
- * Data Transfer Object (DTO) for creating a new Step inside a Procedure.
- */
-export interface CreateStepDTO {
-    name: string;
-    description: string;
-    order: number;
-    sections?: CreateSectionDTO[];
-}
-
-/**
- * Data Transfer Object (DTO) for creating a complete Procedure (HU-007).
- */
-export interface CreateProcedureDTO {
-    idProject: number;
-    name: string;
-    description: string;
-    idPreviousVersion?: number;
-    tags?: string[]; // Array of category names assigned to the procedure
-    steps?: CreateStepDTO[];
-}
-
-/**
- * Composite model representing a fully loaded procedure with nested children for UI display.
- */
+/** Section with its nested fields, used for rendering procedure detail views. */
 export interface SectionWithFields extends Section {
-    fields: Field[];
+  fields: Field[];
 }
 
+/** Step with its nested sections (and their fields), used for rendering. */
 export interface StepWithSections extends Step {
-    sections: SectionWithFields[];
+  sections: SectionWithFields[];
 }
 
+import type { Procedure } from '@shared/types';
+
+/**
+ * Fully-hydrated procedure model used by detail-view components.
+ * Extends the shared Procedure with denormalized display-only fields.
+ */
 export interface ProcedureWithDetails extends Procedure {
-    creatorName: string;
-    approverName?: string;
-    projectName: string;
-    steps: StepWithSections[];
+  creatorName: string;
+  approverName?: string;
+  projectName: string;
+  steps: StepWithSections[];
 }

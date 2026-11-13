@@ -1,13 +1,13 @@
 import type { User } from '@/features/auth/types';
 import { storage } from '@/services/storage';
-import type { Project, ProjectAssignmentInput } from '../types';
+import type { ClientProject, ProjectAssignmentInput } from '../types';
 import { normalizeProjectAssignment } from '../utils/validateProject';
 
 export const createProject = async (
   organizationId: string,
   actor: User,
   input: ProjectAssignmentInput,
-): Promise<Project> => {
+): Promise<ClientProject> => {
   await new Promise((resolve) => setTimeout(resolve, 400));
 
   if (actor.organizationId !== organizationId) {
@@ -25,7 +25,7 @@ export const createProject = async (
   });
 
   const now = new Date().toISOString();
-  const project: Project = {
+  const project: ClientProject = {
     id: `prj_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
     organizationId,
     name: assignment.name,

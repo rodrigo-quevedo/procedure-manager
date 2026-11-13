@@ -485,9 +485,9 @@ export const ProcedureSearchAndFilter: React.FC = () => {
                                                     {step.label}
                                                 </span>
                                             </div>
-                                            {/* <div className="shrink-0 self-center">
-                                                                                                        {getLevelBadge(step.level)}
-                                                                                                    </div> */}
+                                            <div className="shrink-0 self-center">
+                                                {getLevelBadge(step.level)}
+                                            </div>
                                         </li>
                                     ))}
                                 </ol>

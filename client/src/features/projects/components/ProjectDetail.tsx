@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import type { User } from '@/features/auth/types';
 import { updateProject } from '../api/updateProject';
-import { CONFIDENTIALITY_LABELS, type ConfidentialityLevel, type Project } from '../types';
+import { CONFIDENTIALITY_LABELS, type ConfidentialityLevel, type ClientProject as Project } from '../types';
 import { ProjectAssignmentFields } from './ProjectAssignmentFields';
 
 interface ProjectDetailProps {

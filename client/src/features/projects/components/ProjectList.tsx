@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { User } from '@/features/auth/types';
-import { CONFIDENTIALITY_LABELS, type Project } from '../types';
+import { CONFIDENTIALITY_LABELS, type ClientProject as Project } from '../types';
 import { projectMatchesQuery, projectParticipants } from '../utils/search';
 
 interface ProjectListProps {

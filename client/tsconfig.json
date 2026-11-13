@@ -21,11 +21,13 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
-        /* Path Aliases para Bulletproof React (@/ -> src/) */
-        "baseUrl": ".",
+        /* Path Aliases — sin baseUrl (eliminado en TS 7) */
         "paths": {
             "@/*": [
-                "src/*"
+                "./src/*"
+            ],
+            "@shared/*": [
+                "../shared/*"
             ]
         }
     },

@@ -1,5 +1,3 @@
-import React from 'react';
-
 export function ExampleChild() {
   return (
     <div className="text-blue-600">

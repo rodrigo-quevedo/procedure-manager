@@ -1,13 +1,13 @@
 import type { User } from '@/features/auth/types';
 import { storage } from '@/services/storage';
-import type { Project, ProjectAssignmentInput } from '../types';
+import type { ClientProject, ProjectAssignmentInput } from '../types';
 import { normalizeProjectAssignment } from '../utils/validateProject';
 
 export const updateProject = async (
   projectId: string,
   actor: User,
   input: ProjectAssignmentInput,
-): Promise<Project> => {
+): Promise<ClientProject> => {
   await new Promise((resolve) => setTimeout(resolve, 400));
 
   const existing = storage.getProjects().find((project) => project.id === projectId);
@@ -34,7 +34,7 @@ export const updateProject = async (
     previouslyAssignedIds: [...existing.leaderIds, ...existing.memberIds],
   });
 
-  const updated: Project = {
+  const updated: ClientProject = {
     ...existing,
     name: assignment.name,
     confidentiality: assignment.confidentiality,

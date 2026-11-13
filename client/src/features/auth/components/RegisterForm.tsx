@@ -9,7 +9,7 @@ interface RegisterFormProps {
 }
 
 export const RegisterForm = ({
-  onSuccess,
+  onSuccess: _onSuccess,
   onNavigateToLogin,
 }: RegisterFormProps) => {
   const [organizationName, setOrganizationName] = useState('');
@@ -61,7 +61,7 @@ export const RegisterForm = ({
     setIsLoading(true);
 
     try {
-      const session = await registerOrganization({
+      await registerOrganization({
         organizationName,
         email,
         password,

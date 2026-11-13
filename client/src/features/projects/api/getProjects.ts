@@ -1,15 +1,15 @@
 import type { User } from '@/features/auth/types';
 import { storage } from '@/services/storage';
-import type { Project } from '../types';
+import type { ClientProject } from '../types';
 
-function isAssigned(project: Project, userId: string): boolean {
+function isAssigned(project: ClientProject, userId: string): boolean {
   return project.leaderIds.includes(userId) || project.memberIds.includes(userId);
 }
 
 export const getProjects = async (
   organizationId: string,
   actor: User,
-): Promise<Project[]> => {
+): Promise<ClientProject[]> => {
   await new Promise((resolve) => setTimeout(resolve, 200));
 
   const projects = storage
