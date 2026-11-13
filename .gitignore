@@ -1,0 +1,10 @@
+# Dependencias (cubre raíz, client/ y server/)
+node_modules/
+
+# Archivos de entorno y base de datos
+.env
+*.db
+*.sqlite
+
+# Compilados
+dist/

@@ -1,0 +1,9 @@
+{
+    "name": "procedure-manager-monorepo",
+    "private": true,
+    "workspaces": [
+        "shared",
+        "client",
+        "server"
+    ]
+}

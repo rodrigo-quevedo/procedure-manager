@@ -1,12 +1,10 @@
 > 🌐 **Idioma / Language:** [🇪🇸 Español](#-español) | [🇬🇧 English](#-english)
 
-# Sistema de Gestión, Ejecución y Trazabilidad de Procedimientos de Desarrollo de Software
-
-
----
-
 <a name="-español"></a>
 ## 🇪🇸 Español
+
+# Sistema de Gestión, Ejecución y Trazabilidad de Procedimientos de Desarrollo de Software
+
 
 Prototipo funcional de aplicación web desarrollado como Trabajo Final de Grado (Ingeniería en Software - Universidad Siglo 21) por **Rodrigo Martín Quevedo**.
 
