@@ -44,8 +44,11 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
   const correctionExecutions = executions.filter((item) => item.state === 'HAS_CORRECTIONS');
   const pausedExecutions = executions.filter((item) => item.state === 'PAUSED');
   const pendingEvaluationExecutions = executions.filter((item) => item.state === 'PENDING_EVALUATION');
+  const approvedExecutions = executions.filter((item) => item.state === 'APPROVED_FINISHED');
+  const cancelledExecutions = executions.filter((item) => item.state === 'CANCELLED');
+  const totalCount = executions.filter((e) => e.state !== 'ACTIVE').length;
 
-  // Total de ejecuciones en proceso: Pausadas + Con corrección + Evaluación pendiente (Criterio 4)
+  // Total de ejecuciones en proceso: Pausadas + Con corrección + Evaluación pendiente
   const totalInProcessCount =
     pausedExecutions.length + correctionExecutions.length + pendingEvaluationExecutions.length;
 
@@ -74,45 +77,44 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
     onResumeExecution(executionId);
   };
 
-  // Render State Badge (Criterio 3: "Evaluación Pendiente" con gris más claro)
+  // Render State Badge: Requerimiento 1 -> 'Corregir' en vez de 'Pendiente Corrección'
   const renderStateBadge = (state: ExecutionState) => {
     switch (state) {
       case 'ACTIVE':
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-600 text-white shadow-sm shadow-blue-200">
             <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
-            <Play className="w-3 h-3 fill-current" /> Activa
+            <Play className="w-3 h-3 fill-current" /> Activo
           </span>
         );
       case 'HAS_CORRECTIONS':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-500 text-white shadow-xs">
-            <AlertCircle className="w-3.5 h-3.5" /> Pendiente Corrección
+          <span className="w-25 justify-center inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-500 text-white shadow-xs">
+            <AlertCircle className="w-3.5 h-3.5" /> Corregir
           </span>
         );
       case 'PAUSED':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300">
-            <Pause className="w-3 h-3" /> Pausada
+          <span className="w-25 justify-center inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300">
+            <Pause className="w-3 h-3" /> Pausa
           </span>
         );
       case 'PENDING_EVALUATION':
-        // Criterio 3: Gris más claro para que sea menos llamativo
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 border border-gray-300">
-            <Clock className="w-3 h-3 text-gray-500" /> Evaluación Pendiente
+          <span className="w-25 justify-center inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 border border-gray-300">
+            <Clock className="w-3 h-3 text-gray-500" /> Evaluando
           </span>
         );
       case 'CANCELLED':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-300">
-            <XCircle className="w-3 h-3" /> Cancelada
+          <span className="w-25 justify-center inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-300">
+            <XCircle className="w-3 h-3" /> Cancelado
           </span>
         );
       case 'APPROVED_FINISHED':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
-            <CheckCircle2 className="w-3 h-3" /> Aprobada
+          <span className="w-25 justify-center inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
+            <CheckCircle2 className="w-3 h-3" /> Aprobado
           </span>
         );
     }
@@ -160,43 +162,19 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
 
   return (
     <div className="space-y-6">
-      {/* Encabezado Principal formal y limpio con Contador Total en Proceso (Criterios 3, 4 y 6) */}
-      <div>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Gestión de Ejecuciones</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Supervisa las tareas que requieren atención inmediata y consulta el historial completo de ejecuciones.
-            </p>
-          </div>
 
-          {/* Criterio 4 y 6: Indicador destacado arriba de todo de ejecuciones en proceso */}
-          <div className="inline-flex items-center gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-2 self-start sm:self-auto shadow-2xs">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-red-600 animate-pulse"></span>
-            <div className="text-xs">
-              <span className="text-gray-500 font-medium">Cantidad de ejecuciones en proceso:</span>{' '}
-              <span className="font-bold text-red-700 text-sm">{totalInProcessCount}</span>
-              <span className="text-[11px] text-gray-400 block sm:inline sm:ml-1">
-                ({pausedExecutions.length} pausadas, {correctionExecutions.length} correcciones, {pendingEvaluationExecutions.length} evaluación pend.)
-              </span>
-            </div>
-          </div>
-        </div>
 
-        <hr className="border-t border-gray-200 mt-4" />
-      </div>
-
-      {/* SECCIÓN 1: PENDIENTES DE CORRECCIÓN (Criterio 1: Título rojo, descripción y horizontal rule roja) */}
+      {/* SECCIÓN 1: CORREGIR (Requerimiento 1 & 3: Lista-tabla con motivo de corrección) */}
       <div className="space-y-3">
         <div>
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-red-600 uppercase tracking-wide flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-red-600" />
-              Pendientes de Corrección
+              Corregir
             </h2>
-            {/* Criterio 6: Label explícito con la palabra 'Cantidad' */}
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-red-100 text-red-800 border border-red-200">
-              Cantidad: {correctionExecutions.length}
+            {/* Cuadrado con cantidad */}
+            <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-bold rounded-xs bg-red-500 text-white shadow-2xs">
+              {correctionExecutions.length}
             </span>
           </div>
           <p className="text-xs text-red-700 mt-1">
@@ -206,35 +184,48 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
         </div>
 
         {correctionExecutions.length > 0 ? (
-          <div className="bg-white rounded-xl border border-red-200 shadow-sm overflow-hidden divide-y divide-red-100">
-            {correctionExecutions.map((execution) => (
-              <div
-                key={execution.id}
-                className="p-4 hover:bg-red-50/30 transition flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer"
-                onClick={() => handleOpenDetails(execution.id)}
-              >
-                <div className="space-y-1 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-mono font-semibold text-gray-500">#{execution.id}</span>
-                    <h3 className="text-sm font-bold text-gray-900 hover:text-red-700">
-                      {execution.procedureName}
-                    </h3>
-                    <span className="text-xs text-gray-400">•</span>
-                    <span className="text-xs font-medium text-gray-600">{execution.projectName}</span>
-                  </div>
-                  <div className="p-2.5 bg-red-50 rounded-lg border border-red-200 text-xs text-red-900 font-medium flex items-start gap-1.5">
-                    <span className="font-bold shrink-0 text-red-800">Motivo de corrección:</span>
-                    <span>{execution.lastProgress}</span>
-                  </div>
-                </div>
 
-                {/* Criterio 2: En esta sección de correcciones, el label rojo 'Pendiente de Corrección' está de más */}
-                <div className="flex items-center justify-between md:justify-end gap-3 shrink-0">
-                  {renderActionButtons(execution)}
-                </div>
-              </div>
-            ))}
-          </div>
+          <table className="w-full text-left text-sm text-gray-600">
+            <thead className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <tr>
+                <th className="px-4 py-3">ID / Procedimiento</th>
+                <th className="px-4 py-3">Proyecto</th>
+                <th className="px-4 py-3">Motivo de Corrección</th>
+                <th className="px-4 py-3 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-red-100 text-xs">
+              {correctionExecutions.map((execution) => (
+                <tr
+                  key={execution.id}
+                  className="hover:bg-red-50/40 transition cursor-pointer"
+                  onClick={() => handleOpenDetails(execution.id)}
+                >
+                  <td className="px-4 py-3">
+                    <div className="font-bold text-gray-900 text-sm hover:text-red-700 transition-colors">
+                      #{execution.id} - {execution.procedureName}
+                    </div>
+                    <div className="text-[11px] text-gray-400">
+                      Iniciado: {new Date(execution.startedAt).toLocaleDateString()}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-gray-700 font-medium">
+                    {execution.projectName}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="p-2 bg-red-50 rounded-md border border-red-200/80 text-xs text-red-900 font-medium flex items-start gap-1.5 max-w-lg">
+                      <span className="font-bold shrink-0 text-red-800">Observación:</span>
+                      <span>{execution.lastProgress}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {renderActionButtons(execution)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
         ) : (
           <div className="p-4 bg-white rounded-xl border border-dashed border-red-200 text-center text-xs text-gray-500">
             No hay ejecuciones pendientes de corrección actualmente.
@@ -242,17 +233,17 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
         )}
       </div>
 
-      {/* SECCIÓN 2: PAUSADAS (Criterios 2 y 6) */}
+      {/* SECCIÓN 2: EN PAUSA (Requerimiento 3: Formato lista-tabla igual a todas las ejecuciones) */}
       <div className="space-y-3 pt-2">
         <div>
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide flex items-center gap-2">
               <Pause className="w-5 h-5 text-amber-600" />
-              Ejecuciones Pausadas
+              En Pausa
             </h2>
-            {/* Criterio 6: Label explícito con la palabra 'Cantidad' */}
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
-              Cantidad: {pausedExecutions.length}
+            {/* Cuadrado con cantidad */}
+            <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-bold rounded-xs bg-amber-500 text-white shadow-2xs">
+              {pausedExecutions.length}
             </span>
           </div>
           <p className="text-xs text-gray-500 mt-1">
@@ -262,38 +253,50 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
         </div>
 
         {pausedExecutions.length > 0 ? (
-          <div className="bg-white rounded-xl border border-amber-200 shadow-sm overflow-hidden divide-y divide-gray-100">
-            {pausedExecutions.map((execution) => (
-              <div
-                key={execution.id}
-                className="p-4 hover:bg-gray-50/80 transition flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer"
-                onClick={() => handleOpenDetails(execution.id)}
-              >
-                <div className="space-y-1 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-mono font-semibold text-gray-500">#{execution.id}</span>
-                    <h3 className="text-sm font-bold text-gray-900 hover:text-blue-600">
-                      {execution.procedureName}
-                    </h3>
-                    <span className="text-xs text-gray-400">•</span>
-                    <span className="text-xs font-medium text-gray-600">{execution.projectName}</span>
-                  </div>
-                  <div className="text-xs text-gray-500 flex items-center gap-3">
-                    <span>
-                      Avance: <strong>{execution.completedSteps}/{execution.totalSteps}</strong> pasos
-                    </span>
-                    <span>•</span>
-                    <span className="truncate max-w-md">{execution.lastProgress}</span>
-                  </div>
-                </div>
 
-                <div className="flex items-center justify-between md:justify-end gap-3 shrink-0">
-                  {renderStateBadge(execution.state)}
-                  {renderActionButtons(execution)}
-                </div>
-              </div>
-            ))}
-          </div>
+          <table className="w-full text-left text-sm text-gray-600">
+            <thead className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <tr>
+                <th className="px-4 py-3">ID / Procedimiento</th>
+                <th className="px-4 py-3">Proyecto</th>
+                <th className="px-4 py-3">Estado</th>
+                <th className="px-4 py-3">Progreso</th>
+                <th className="px-4 py-3 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 text-xs">
+              {pausedExecutions.map((execution) => (
+                <tr
+                  key={execution.id}
+                  className="hover:bg-amber-50/30 transition cursor-pointer"
+                  onClick={() => handleOpenDetails(execution.id)}
+                >
+                  <td className="px-4 py-3">
+                    <div className="font-bold text-gray-900 text-sm hover:text-blue-600 transition-colors">
+                      #{execution.id} - {execution.procedureName}
+                    </div>
+                    <div className="text-[11px] text-gray-400">
+                      Iniciado: {new Date(execution.startedAt).toLocaleDateString()}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-gray-700 font-medium">
+                    {execution.projectName}
+                  </td>
+                  <td className="px-4 py-3">{renderStateBadge(execution.state)}</td>
+                  <td className="px-4 py-3">
+                    <div className="font-semibold text-gray-800">
+                      {execution.completedSteps}/{execution.totalSteps} Pasos
+                    </div>
+                    <div className="text-gray-400 truncate max-w-xs">{execution.lastProgress}</div>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {renderActionButtons(execution)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
         ) : (
           <div className="p-4 bg-white rounded-xl border border-dashed border-gray-200 text-center text-xs text-gray-500">
             No tienes ejecuciones pausadas en este momento.
@@ -301,15 +304,17 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
         )}
       </div>
 
-      {/* SECCIÓN 3: VISTA GENERAL CON FILTROS (Criterio 3: "Evaluación Pendiente" y Criterio 6: "Cantidad:") */}
+      {/* SECCIÓN 3: VISTA GENERAL CON FILTROS (Requerimiento 2: texto plano + cuadrado con número) */}
       <div className="space-y-4 pt-4">
         <div>
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-gray-900">Historial y Todas las Ejecuciones</h2>
-            {/* Criterio 6: Label explícito con la palabra 'Cantidad' */}
-            <span className="text-xs text-gray-500 font-medium">
-              Cantidad total listada: {filteredExecutions.length}
-            </span>
+            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+              <span>Total listadas</span>
+              <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 text-[11px] font-bold rounded-xs bg-slate-800 text-white">
+                {filteredExecutions.length}
+              </span>
+            </div>
           </div>
           <p className="text-xs text-gray-500 mt-0.5">
             Filtra y visualiza el estado completo del historial de ejecuciones.
@@ -317,79 +322,114 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
           <hr className="border-t border-gray-200 mt-2" />
         </div>
 
-        {/* Pestañas de Filtro por Estado con labels explícitos de Cantidad */}
+        {/* Pestañas de Filtro por Estado (Requerimiento 2: Nombre en texto plano + cuadrado con número del color de la categoría) */}
         <div className="flex flex-wrap gap-2 pb-1">
+          {/* Todas */}
           <button
             type="button"
             onClick={() => setActiveTab('ALL')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-              activeTab === 'ALL'
-                ? 'bg-slate-800 text-white shadow-xs'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
-            }`}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border ${activeTab === 'ALL'
+              ? 'bg-slate-800 text-white border-slate-800 shadow-xs'
+              : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
+              }`}
           >
-            Todas (Cantidad: {executions.filter((e) => e.state !== 'ACTIVE').length})
+            <span>Todas</span>
+            <span
+              className={`inline-flex items-center justify-center min-w-4.5 h-4.5 px-1 rounded-xs text-[11px] font-bold ${activeTab === 'ALL' ? 'bg-slate-700 text-white' : 'bg-slate-800 text-white'
+                }`}
+            >
+              {totalCount}
+            </span>
           </button>
 
+          {/* Corregir */}
           <button
             type="button"
             onClick={() => setActiveTab('HAS_CORRECTIONS')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-              activeTab === 'HAS_CORRECTIONS'
-                ? 'bg-red-500 text-white shadow-xs'
-                : 'bg-white text-red-700 border border-red-200 hover:bg-red-50'
-            }`}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border ${activeTab === 'HAS_CORRECTIONS'
+              ? 'bg-red-600 text-white border-red-600 shadow-xs'
+              : 'bg-white text-gray-700 border-gray-200 hover:bg-red-50 hover:text-red-700'
+              }`}
           >
-            Pendientes de Corrección (Cantidad: {correctionExecutions.length})
+            <span>Corregir</span>
+            <span
+              className={`inline-flex items-center justify-center min-w-4.5 h-4.5 px-1 rounded-xs text-[11px] font-bold ${activeTab === 'HAS_CORRECTIONS' ? 'bg-red-700 text-white' : 'bg-red-500 text-white'
+                }`}
+            >
+              {correctionExecutions.length}
+            </span>
           </button>
 
+          {/* En Pausa */}
           <button
             type="button"
             onClick={() => setActiveTab('PAUSED')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-              activeTab === 'PAUSED'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'bg-white text-amber-800 border border-amber-200 hover:bg-amber-50'
-            }`}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border ${activeTab === 'PAUSED'
+              ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+              : 'bg-white text-gray-700 border-gray-200 hover:bg-amber-50 hover:text-amber-800'
+              }`}
           >
-            Pausadas (Cantidad: {pausedExecutions.length})
+            <span>En Pausa</span>
+            <span
+              className={`inline-flex items-center justify-center min-w-4.5 h-4.5 px-1 rounded-xs text-[11px] font-bold ${activeTab === 'PAUSED' ? 'bg-amber-700 text-white' : 'bg-amber-500 text-white'
+                }`}
+            >
+              {pausedExecutions.length}
+            </span>
           </button>
 
-          {/* Criterio 3: Texto cambiado a "Evaluación Pendiente" */}
+          {/* Evaluación Pendiente */}
           <button
             type="button"
             onClick={() => setActiveTab('PENDING_EVALUATION')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-              activeTab === 'PENDING_EVALUATION'
-                ? 'bg-gray-700 text-white shadow-xs'
-                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
-            }`}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border ${activeTab === 'PENDING_EVALUATION'
+              ? 'bg-gray-700 text-white border-gray-700 shadow-xs'
+              : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
+              }`}
           >
-            Evaluación Pendiente (Cantidad: {pendingEvaluationExecutions.length})
+            <span>Evaluación Pendiente</span>
+            <span
+              className={`inline-flex items-center justify-center min-w-4.5 h-4.5 px-1 rounded-xs text-[11px] font-bold ${activeTab === 'PENDING_EVALUATION' ? 'bg-gray-800 text-white' : 'bg-gray-400 text-white'
+                }`}
+            >
+              {pendingEvaluationExecutions.length}
+            </span>
           </button>
 
+          {/* Aprobadas */}
           <button
             type="button"
             onClick={() => setActiveTab('APPROVED_FINISHED')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-              activeTab === 'APPROVED_FINISHED'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-50'
-            }`}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border ${activeTab === 'APPROVED_FINISHED'
+              ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+              : 'bg-white text-gray-700 border-gray-200 hover:bg-emerald-50 hover:text-emerald-700'
+              }`}
           >
-            Aprobadas (Cantidad: {executions.filter((e) => e.state === 'APPROVED_FINISHED').length})
+            <span>Aprobadas</span>
+            <span
+              className={`inline-flex items-center justify-center min-w-4.5 h-4.5 px-1 rounded-xs text-[11px] font-bold ${activeTab === 'APPROVED_FINISHED' ? 'bg-emerald-700 text-white' : 'bg-emerald-600 text-white'
+                }`}
+            >
+              {approvedExecutions.length}
+            </span>
           </button>
 
+          {/* Canceladas */}
           <button
             type="button"
             onClick={() => setActiveTab('CANCELLED')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-              activeTab === 'CANCELLED'
-                ? 'bg-gray-600 text-white shadow-xs'
-                : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-100'
-            }`}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border ${activeTab === 'CANCELLED'
+              ? 'bg-gray-600 text-white border-gray-600 shadow-xs'
+              : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
+              }`}
           >
-            Canceladas (Cantidad: {executions.filter((e) => e.state === 'CANCELLED').length})
+            <span>Canceladas</span>
+            <span
+              className={`inline-flex items-center justify-center min-w-4.5 h-4.5 px-1 rounded-xs text-[11px] font-bold ${activeTab === 'CANCELLED' ? 'bg-gray-700 text-white' : 'bg-gray-500 text-white'
+                }`}
+            >
+              {cancelledExecutions.length}
+            </span>
           </button>
         </div>
 
@@ -423,7 +463,6 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
                   <td className="px-4 py-3 text-gray-700 font-medium">
                     {execution.projectName}
                   </td>
-                  {/* Aquí abajo se sigue mostrando el label según Criterio 2 */}
                   <td className="px-4 py-3">{renderStateBadge(execution.state)}</td>
                   <td className="px-4 py-3">
                     <div className="font-semibold text-gray-800">
@@ -458,7 +497,7 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
         />
       )}
 
-      {/* Modal para Confirmar Cancelación de Ejecución (Criterio 5) */}
+      {/* Modal para Confirmar Cancelación de Ejecución */}
       {cancelCandidate && (
         <div className="fixed inset-0 z-60 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">

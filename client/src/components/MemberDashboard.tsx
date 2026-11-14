@@ -172,7 +172,7 @@ export const MemberDashboard = ({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen flex flex-col font-sans">
       <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10 gap-4">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
@@ -189,11 +189,10 @@ export const MemberDashboard = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('PROJECTS')}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
-                  activeTab === 'PROJECTS'
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${activeTab === 'PROJECTS'
                     ? 'bg-red-50 text-red-700'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
+                  }`}
               >
                 Proyectos
               </button>
@@ -202,11 +201,10 @@ export const MemberDashboard = ({
             <button
               type="button"
               onClick={() => setActiveTab('PROCEDURES')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
-                activeTab === 'PROCEDURES'
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${activeTab === 'PROCEDURES'
                   ? 'bg-red-50 text-red-700'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
+                }`}
             >
               Procedimientos
             </button>
@@ -214,11 +212,10 @@ export const MemberDashboard = ({
             <button
               type="button"
               onClick={() => setActiveTab('EXECUTIONS')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
-                activeTab === 'EXECUTIONS'
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${activeTab === 'EXECUTIONS'
                   ? 'bg-red-50 text-red-700'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
+                }`}
             >
               Mis Ejecuciones
             </button>
@@ -226,11 +223,10 @@ export const MemberDashboard = ({
             <button
               type="button"
               onClick={() => setActiveTab('OVERVIEW')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
-                activeTab === 'OVERVIEW'
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${activeTab === 'OVERVIEW'
                   ? 'bg-red-50 text-red-700'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
+                }`}
             >
               Resumen
             </button>
