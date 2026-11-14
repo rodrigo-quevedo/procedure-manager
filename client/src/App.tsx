@@ -4,6 +4,7 @@ import type { AuthSession, Organization, User } from '@/features/auth';
 import { OrganizationDashboard } from '@/components/OrganizationDashboard';
 import { MemberDashboard } from '@/components/MemberDashboard';
 import { storage } from '@/services/storage';
+import ExecutionManagementMock from './examples/ExecutionManagement';
 
 type AuthView = 'register' | 'login';
 
@@ -80,6 +81,8 @@ export function App() {
       )}
     </div>
   );
+
+  // return <ExecutionManagementMock />;
 
 
 }

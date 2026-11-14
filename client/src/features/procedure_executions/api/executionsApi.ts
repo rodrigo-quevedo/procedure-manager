@@ -18,6 +18,15 @@ export interface ExecutionListItem extends Execution {
   lastProgress: string;
 }
 
+const DEFAULT_PROJECT_NAMES: Record<number, string> = {
+  1: 'Sistema Core Backend',
+  2: 'Base de Datos Local',
+  3: 'Módulo de Seguridad',
+  4: 'Almacenamiento Multimedia',
+  5: 'Portal Clientes',
+  6: 'Infraestructura Cloud',
+};
+
 export const getExecutions = async (developerId?: number): Promise<ExecutionListItem[]> => {
   await new Promise((r) => setTimeout(r, 150));
   const executions = storage.getExecutions();
@@ -51,18 +60,23 @@ export const getExecutions = async (developerId?: number): Promise<ExecutionList
     } else if (exec.state === 'PENDING_EVALUATION') {
       lastProgress = 'Enviado para evaluación por Líder';
     } else if (exec.state === 'HAS_CORRECTIONS') {
-      lastProgress = 'Líder solicitó correcciones en los pasos';
+      lastProgress = 'Líder solicitó correcciones en comprobante';
     } else if (exec.state === 'PAUSED') {
       lastProgress = `Paso ${completedSteps || 1} de ${totalSteps} - Pausado`;
     } else {
       lastProgress = `Paso ${completedSteps || 1} de ${totalSteps} - En curso`;
     }
 
+    const resolvedProjectName =
+      proj?.name ||
+      DEFAULT_PROJECT_NAMES[exec.idProject] ||
+      `Proyecto #${exec.idProject}`;
+
     return {
       ...exec,
       procedureName: proc?.name || `Procedimiento #${exec.idProcedure}`,
-      projectName: proj?.name || `Proyecto #${exec.idProject}`,
-      developerName: dev?.name || 'Desarrollador',
+      projectName: resolvedProjectName,
+      developerName: dev?.name || 'Juan Pérez',
       totalSteps,
       completedSteps,
       lastProgress,

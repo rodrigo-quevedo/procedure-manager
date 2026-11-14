@@ -20,8 +20,12 @@ export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-100 text-blue-800">
-                {EXECUTION_STATE_LABELS[execution.state]}
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                execution.state === 'PENDING_EVALUATION'
+                  ? 'bg-gray-200 text-gray-700 border border-gray-300'
+                  : 'bg-blue-100 text-blue-800'
+              }`}>
+                {execution.state === 'PENDING_EVALUATION' ? 'Evaluación Pendiente' : EXECUTION_STATE_LABELS[execution.state]}
               </span>
               <span className="text-xs text-gray-500">Ejecución #{execution.id}</span>
             </div>

@@ -15,7 +15,7 @@ export function initializeProcedureMocks(organizationId: string, developerId: nu
   const mockProcedures: Procedure[] = [
     {
       id: 1,
-      idProject: projectId,
+      idProject: 1,
       idCreator: developerId,
       idLeaderApprover: null,
       idPreviousVersion: null,
@@ -27,7 +27,7 @@ export function initializeProcedureMocks(organizationId: string, developerId: nu
     },
     {
       id: 2,
-      idProject: projectId,
+      idProject: 2,
       idCreator: developerId,
       idLeaderApprover: null,
       idPreviousVersion: null,
@@ -39,7 +39,7 @@ export function initializeProcedureMocks(organizationId: string, developerId: nu
     },
     {
       id: 3,
-      idProject: projectId,
+      idProject: 3,
       idCreator: developerId,
       idLeaderApprover: null,
       idPreviousVersion: null,
@@ -51,7 +51,7 @@ export function initializeProcedureMocks(organizationId: string, developerId: nu
     },
     {
       id: 4,
-      idProject: projectId,
+      idProject: 4,
       idCreator: developerId,
       idLeaderApprover: null,
       idPreviousVersion: null,
@@ -102,41 +102,41 @@ export function initializeProcedureMocks(organizationId: string, developerId: nu
 
   const mockExecutions: Execution[] = [
     {
+      id: 104,
+      idProcedure: 4,
+      idProject: 4,
+      idDeveloper: developerId,
+      state: 'HAS_CORRECTIONS',
+      startedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+    },
+    {
       id: 101,
       idProcedure: 1,
-      idProject: projectId,
+      idProject: 1,
       idDeveloper: developerId,
       state: 'PAUSED',
       startedAt: new Date(Date.now() - 3600000 * 5).toISOString(),
     },
     {
       id: 102,
-      idProcedure: 1,
-      idProject: projectId,
+      idProcedure: 2,
+      idProject: 2,
       idDeveloper: developerId,
-      state: 'ACTIVE',
+      state: 'PAUSED',
       startedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
     },
     {
       id: 103,
-      idProcedure: 2,
-      idProject: projectId,
+      idProcedure: 3,
+      idProject: 3,
       idDeveloper: developerId,
       state: 'PENDING_EVALUATION',
       startedAt: new Date(Date.now() - 86400000).toISOString(),
     },
     {
-      id: 104,
-      idProcedure: 4,
-      idProject: projectId,
-      idDeveloper: developerId,
-      state: 'HAS_CORRECTIONS',
-      startedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    },
-    {
       id: 105,
       idProcedure: 1,
-      idProject: projectId,
+      idProject: 1,
       idDeveloper: developerId,
       state: 'APPROVED_FINISHED',
       startedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
@@ -145,7 +145,7 @@ export function initializeProcedureMocks(organizationId: string, developerId: nu
     {
       id: 106,
       idProcedure: 3,
-      idProject: projectId,
+      idProject: 3,
       idDeveloper: developerId,
       state: 'CANCELLED',
       startedAt: new Date(Date.now() - 86400000 * 4).toISOString(),

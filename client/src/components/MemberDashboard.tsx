@@ -40,7 +40,7 @@ export const MemberDashboard = ({
   onLogout,
 }: MemberDashboardProps) => {
   const [activeTab, setActiveTab] = useState<MemberTab>(
-    user.role === 'LIDER' ? 'PROJECTS' : 'PROCEDURES'
+    user.role === 'LIDER' ? 'PROJECTS' : 'EXECUTIONS'
   );
   const [globalSuccess, setGlobalSuccess] = useState<string | null>(null);
   const [assignedProjects, setAssignedProjects] = useState<Project[]>([]);

@@ -108,6 +108,7 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
   const [hasSavedProgress, setHasSavedProgress] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   // Ensure an active execution instance exists
   useEffect(() => {
@@ -312,10 +313,10 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
   };
 
   // Cancel execution (HU-011 CA 5)
-  const handleCancel = async () => {
-    const confirmed = window.confirm('¿Está seguro de que desea cancelar esta ejecución? No permitirá nuevas modificaciones.');
-    if (!confirmed || !execution) return;
+  const handleConfirmCancel = async () => {
+    if (!execution) return;
     await updateExecutionState(execution.id, 'CANCELLED');
+    setShowCancelModal(false);
     if (onSuccessFeedback) {
       onSuccessFeedback('Ejecución cancelada.');
     }
@@ -524,7 +525,7 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
             onDeleteStep={handleDeleteStep}
             onCreateStep={handleCreateStep}
             onPauseExecution={handlePause}
-            onCancelExecution={handleCancel}
+            onCancelExecution={() => setShowCancelModal(true)}
             onCreateSection={handleCreateSection}
             onUpdateSection={handleUpdateSection}
             onCreateField={handleCreateField}
@@ -546,6 +547,35 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
           </div>
         )}
       </main>
+
+      {/* Modal Confirmación de Cancelación */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-60 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <h3 className="text-base font-bold text-gray-900">Confirmar Cancelación</h3>
+            <p className="text-xs text-gray-600 leading-relaxed bg-gray-50 p-3 rounded-lg border border-gray-100">
+              ¿Está seguro de que desea cancelar esta ejecución en curso?
+              Esta acción no permitirá nuevas modificaciones y quedará registrada en el historial como cancelada.
+            </p>
+            <div className="flex justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowCancelModal(false)}
+                className="px-4 py-2 text-xs font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+              >
+                Continuar Ejecutando
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmCancel}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+              >
+                Confirmar Cancelación
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
