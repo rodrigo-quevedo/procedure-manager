@@ -95,14 +95,14 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
         );
       case 'PAUSED':
         return (
-          <span className="w-25 justify-center inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300">
+          <span className="w-25 justify-center inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white text-black border border-black">
             <Pause className="w-3 h-3" /> Pausa
           </span>
         );
       case 'PENDING_EVALUATION':
         return (
-          <span className="w-25 justify-center inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 border border-gray-300">
-            <Clock className="w-3 h-3 text-gray-500" /> Evaluando
+          <span className="w-25 justify-center inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[#00707E]/80 text-white border border-gray-300">
+            <Clock className="w-3 h-3 text-white" /> Evaluando
           </span>
         );
       case 'CANCELLED':
@@ -122,38 +122,47 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
 
   const renderActionButtons = (execution: ExecutionListItem) => {
     return (
-      <div className="flex items-center justify-end gap-1.5 h-7" onClick={(e) => e.stopPropagation()}>
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-end gap-1.5 h-7 z-10" onClick={(e) => e.stopPropagation()}>
         {/* Botón Ver Detalle */}
         <button
           type="button"
           onClick={() => handleOpenDetails(execution.id)}
-          className="inline-flex items-center justify-center w-7 h-7 text-gray-500 hover:text-gray-800 hover:bg-gray-100 border border-gray-200 rounded-md transition-colors cursor-pointer"
+          className="group inline-flex items-center justify-center w-7 h-7 hover:w-28 gap-1.5 text-gray-500 hover:text-gray-800 bg-white hover:bg-gray-100 border border-gray-200 rounded-md overflow-hidden transition-all duration-500 ease-in-out cursor-pointer px-0 hover:px-2.5 shadow-sm"
           title="Ver Detalle"
         >
-          <Eye className="w-3.5 h-3.5" />
+          <Eye className="w-3.5 h-3.5 shrink-0" />
+          <span className="max-w-0 group-hover:max-w-[80px] opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap transition-all duration-500 ease-in-out text-xs font-medium">
+            Detalle
+          </span>
         </button>
 
-        {/* Botón Reanudar (Si está Pausada o con Correcciones) */}
+        {/* Botón Reanudar */}
         {(execution.state === 'PAUSED' || execution.state === 'HAS_CORRECTIONS') && (
           <button
             type="button"
             onClick={() => handleResume(execution.id)}
-            className="inline-flex items-center justify-center gap-1 h-7 px-2.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-xs transition-colors cursor-pointer"
+            className="group inline-flex items-center justify-center w-7 h-7 hover:w-32 gap-1.5 text-white bg-red-600 hover:bg-red-700 rounded-md shadow-xs overflow-hidden transition-all duration-500 ease-in-out cursor-pointer px-0 hover:px-2.5 shadow-sm"
             title="Reanudar Ejecución"
           >
-            <Play className="w-3 h-3 fill-current" /> Reanudar
+            <Play className="w-3 h-3 fill-current shrink-0" />
+            <span className="max-w-0 group-hover:max-w-[90px] opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap transition-all duration-500 ease-in-out text-xs font-medium">
+              Reanudar
+            </span>
           </button>
         )}
 
-        {/* Botón Cancelar (Si está Pausada o con Correcciones) */}
+        {/* Botón Cancelar */}
         {(execution.state === 'PAUSED' || execution.state === 'HAS_CORRECTIONS') && (
           <button
             type="button"
             onClick={() => setCancelCandidate(execution)}
-            className="inline-flex items-center justify-center gap-1 h-7 px-2.5 text-xs font-medium text-gray-600 hover:text-red-700 bg-white hover:bg-red-50 border border-gray-200 hover:border-red-200 rounded-md transition-colors cursor-pointer"
+            className="group inline-flex items-center justify-center w-7 h-7 hover:w-32 gap-1.5 text-gray-600 hover:text-red-700 bg-white hover:bg-red-50 border border-gray-200 hover:border-red-200 rounded-md overflow-hidden transition-all duration-500 ease-in-out cursor-pointer px-0 hover:px-2.5 shadow-sm"
             title="Cancelar Ejecución"
           >
-            <XCircle className="w-3 h-3" /> Cancelar
+            <XCircle className="w-3 h-3 shrink-0" />
+            <span className="max-w-0 group-hover:max-w-[90px] opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap transition-all duration-500 ease-in-out text-xs font-medium">
+              Cancelar
+            </span>
           </button>
         )}
       </div>
@@ -167,8 +176,8 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
       {/* SECCIÓN 1: CORREGIR (Requerimiento 1 & 3: Lista-tabla con motivo de corrección) */}
       <div className="space-y-3">
         <div>
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-red-600 uppercase tracking-wide flex items-center gap-2">
+          <div className="flex items-center justify-between group relative">
+            <h2 className="cursor-default text-lg font-bold text-black  tracking-wide flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-red-600" />
               Corregir
             </h2>
@@ -177,9 +186,6 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
               {correctionExecutions.length}
             </span>
           </div>
-          <p className="text-xs text-red-700 mt-1">
-            Observaciones devueltas por el revisor que requieren ajustes del desarrollador.
-          </p>
           <hr className="border-t border-red-300 mt-2" />
         </div>
 
@@ -188,10 +194,10 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
           <table className="w-full text-left text-sm text-gray-600">
             <thead className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
               <tr>
-                <th className="px-4 py-3">ID / Procedimiento</th>
+                <th className="px-4 py-3">Procedimiento</th>
                 <th className="px-4 py-3">Proyecto</th>
                 <th className="px-4 py-3">Motivo de Corrección</th>
-                <th className="px-4 py-3 text-right">Acciones</th>
+                <th className="px-4 py-3 text-right w-[1%] whitespace-nowrap">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-red-100 text-xs">
@@ -203,7 +209,7 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
                 >
                   <td className="px-4 py-3">
                     <div className="font-bold text-gray-900 text-sm hover:text-red-700 transition-colors">
-                      #{execution.id} - {execution.procedureName}
+                      {execution.procedureName}
                     </div>
                     <div className="text-[11px] text-gray-400">
                       Iniciado: {new Date(execution.startedAt).toLocaleDateString()}
@@ -218,8 +224,11 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
                       <span>{execution.lastProgress}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    {renderActionButtons(execution)}
+                  <td className="px-4 py-3 text-right relative w-[1%] whitespace-nowrap">
+                    {/* Contenedor relativo para aislar la expansión flotante */}
+                    <div className="relative inline-flex items-center justify-end h-7">
+                      {renderActionButtons(execution)}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -236,19 +245,16 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
       {/* SECCIÓN 2: EN PAUSA (Requerimiento 3: Formato lista-tabla igual a todas las ejecuciones) */}
       <div className="space-y-3 pt-2">
         <div>
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide flex items-center gap-2">
-              <Pause className="w-5 h-5 text-amber-600" />
-              En Pausa
+          <div className="group relative flex items-center justify-between">
+            <h2 className="cursor-default text-lg font-bold text-gray-900  tracking-wide flex items-center gap-2">
+              <Pause className="w-5 h-5 text-black" />
+              Pausados
             </h2>
             {/* Cuadrado con cantidad */}
-            <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-bold rounded-xs bg-amber-500 text-white shadow-2xs">
+            <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-bold rounded-xs bg-black text-white shadow-2xs">
               {pausedExecutions.length}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            Procedimientos detenidos temporalmente que puedes reanudar en cualquier momento.
-          </p>
           <hr className="border-t border-gray-200 mt-2" />
         </div>
 
@@ -257,9 +263,8 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
           <table className="w-full text-left text-sm text-gray-600">
             <thead className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
               <tr>
-                <th className="px-4 py-3">ID / Procedimiento</th>
+                <th className="px-4 py-3">Procedimiento</th>
                 <th className="px-4 py-3">Proyecto</th>
-                <th className="px-4 py-3">Estado</th>
                 <th className="px-4 py-3">Progreso</th>
                 <th className="px-4 py-3 text-right">Acciones</th>
               </tr>
@@ -273,7 +278,7 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
                 >
                   <td className="px-4 py-3">
                     <div className="font-bold text-gray-900 text-sm hover:text-blue-600 transition-colors">
-                      #{execution.id} - {execution.procedureName}
+                      {execution.procedureName}
                     </div>
                     <div className="text-[11px] text-gray-400">
                       Iniciado: {new Date(execution.startedAt).toLocaleDateString()}
@@ -282,7 +287,6 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
                   <td className="px-4 py-3 text-gray-700 font-medium">
                     {execution.projectName}
                   </td>
-                  <td className="px-4 py-3">{renderStateBadge(execution.state)}</td>
                   <td className="px-4 py-3">
                     <div className="font-semibold text-gray-800">
                       {execution.completedSteps}/{execution.totalSteps} Pasos
@@ -308,17 +312,14 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
       <div className="space-y-4 pt-4">
         <div>
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900">Historial y Todas las Ejecuciones</h2>
-            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+            <h2 className="text-lg font-bold text-gray-900">Historial de Ejecuciones</h2>
+            {/* <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
               <span>Total listadas</span>
               <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 text-[11px] font-bold rounded-xs bg-slate-800 text-white">
                 {filteredExecutions.length}
               </span>
-            </div>
+            </div> */}
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Filtra y visualiza el estado completo del historial de ejecuciones.
-          </p>
           <hr className="border-t border-gray-200 mt-2" />
         </div>
 
@@ -343,10 +344,10 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
           </button>
 
           {/* Corregir */}
-          <button
+          {/* <button
             type="button"
             onClick={() => setActiveTab('HAS_CORRECTIONS')}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border ${activeTab === 'HAS_CORRECTIONS'
+            className={`relative group inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border ${activeTab === 'HAS_CORRECTIONS'
               ? 'bg-red-600 text-white border-red-600 shadow-xs'
               : 'bg-white text-gray-700 border-gray-200 hover:bg-red-50 hover:text-red-700'
               }`}
@@ -358,10 +359,10 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
             >
               {correctionExecutions.length}
             </span>
-          </button>
+          </button> */}
 
           {/* En Pausa */}
-          <button
+          {/* <button
             type="button"
             onClick={() => setActiveTab('PAUSED')}
             className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border ${activeTab === 'PAUSED'
@@ -376,20 +377,20 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
             >
               {pausedExecutions.length}
             </span>
-          </button>
+          </button> */}
 
           {/* Evaluación Pendiente */}
           <button
             type="button"
             onClick={() => setActiveTab('PENDING_EVALUATION')}
             className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border ${activeTab === 'PENDING_EVALUATION'
-              ? 'bg-gray-700 text-white border-gray-700 shadow-xs'
+              ? 'bg-[#00707E] text-white border-[#00707E] shadow-xs'
               : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
               }`}
           >
             <span>Evaluación Pendiente</span>
             <span
-              className={`inline-flex items-center justify-center min-w-4.5 h-4.5 px-1 rounded-xs text-[11px] font-bold ${activeTab === 'PENDING_EVALUATION' ? 'bg-gray-800 text-white' : 'bg-gray-400 text-white'
+              className={`inline-flex items-center justify-center min-w-4.5 h-4.5 px-1 rounded-xs text-[11px] font-bold ${activeTab === 'PENDING_EVALUATION' ? 'bg-[#00424B] text-white' : 'bg-[#00707E] text-white'
                 }`}
             >
               {pendingEvaluationExecutions.length}
@@ -438,7 +439,7 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
           <table className="w-full text-left text-sm text-gray-600">
             <thead className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
               <tr>
-                <th className="px-4 py-3">ID / Procedimiento</th>
+                <th className="px-4 py-3">Procedimiento</th>
                 <th className="px-4 py-3">Proyecto</th>
                 <th className="px-4 py-3">Estado</th>
                 <th className="px-4 py-3">Progreso</th>
@@ -454,7 +455,7 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
                 >
                   <td className="px-4 py-3">
                     <div className="font-bold text-gray-900 text-sm">
-                      #{execution.id} - {execution.procedureName}
+                      {execution.procedureName}
                     </div>
                     <div className="text-[11px] text-gray-400">
                       Iniciado: {new Date(execution.startedAt).toLocaleDateString()}

@@ -190,15 +190,15 @@ export const MemberDashboard = ({
                 type="button"
                 onClick={() => setActiveTab('PROJECTS')}
                 className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${activeTab === 'PROJECTS'
-                    ? 'bg-red-50 text-red-700'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'bg-red-50 text-red-700'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }`}
               >
                 Proyectos
               </button>
             )}
 
-            <button
+            {/* <button
               type="button"
               onClick={() => setActiveTab('PROCEDURES')}
               className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${activeTab === 'PROCEDURES'
@@ -207,14 +207,14 @@ export const MemberDashboard = ({
                 }`}
             >
               Procedimientos
-            </button>
+            </button> */}
 
             <button
               type="button"
               onClick={() => setActiveTab('EXECUTIONS')}
               className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${activeTab === 'EXECUTIONS'
-                  ? 'bg-red-50 text-red-700'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                ? 'bg-red-50 text-red-700'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 }`}
             >
               Mis Ejecuciones
@@ -224,8 +224,8 @@ export const MemberDashboard = ({
               type="button"
               onClick={() => setActiveTab('OVERVIEW')}
               className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${activeTab === 'OVERVIEW'
-                  ? 'bg-red-50 text-red-700'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                ? 'bg-red-50 text-red-700'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 }`}
             >
               Resumen
