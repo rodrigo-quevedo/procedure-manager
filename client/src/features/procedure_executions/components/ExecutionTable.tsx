@@ -91,9 +91,6 @@ export const ExecutionTable: React.FC<ExecutionTableProps> = ({
                     <div className={`font-bold text-gray-900 text-sm ${hoverColorClass} transition-colors`}>
                       {execution.procedureName}
                     </div>
-                    <div className="text-[11px] text-gray-400">
-                      Iniciado: {new Date(execution.startedAt).toLocaleDateString()}
-                    </div>
                   </td>
                 );
               }

@@ -176,34 +176,49 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
     { key: 'procedure', header: 'Procedimiento' },
     { key: 'project', header: 'Proyecto' },
     {
-      key: 'correctionDate',
-      header: (
-        <span className="inline-flex items-center" title="Fecha corrección">
-          <Calendar className="w-4 h-4 text-gray-500" />
-        </span>
-      ),
+      key: 'startedAt',
+      header: 'Inicio',
       className: 'px-4 py-3 text-gray-600',
-      render: (execution) => (
-        <span title="Fecha corrección">
-          {new Date(execution.startedAt).toLocaleDateString()}
-        </span>
-      ),
+      render: (execution) => new Date(execution.startedAt).toLocaleDateString(),
     },
     {
-      key: 'correctionsCount',
-      header: 'Correcciones',
+      key: 'endedAt',
+      header: 'Último envío',
+      className: 'px-4 py-3 text-gray-600',
+      render: (execution) =>
+        execution.endedAt ? new Date(execution.endedAt).toLocaleDateString() : '-',
+    },
+
+    {
+      key: 'evaluated',
+      header: 'Evaluado',
+      className: 'px-4 py-3 text-gray-600',
+      render: (execution) =>
+        execution.endedAt
+          ? new Date(execution.endedAt).toLocaleDateString()
+          : new Date(execution.startedAt).toLocaleDateString(),
+    },
+    {
+      key: 'progress',
+      header: 'Progreso',
       className: 'px-4 py-3',
-      render: (_execution) => (
-        <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-bold rounded-xs bg-red-100 text-red-700 border border-red-200">
-          1
+      render: () => (
+        <span className="text-gray-800 font-medium">
+          0/3 Correcciones Resueltas
         </span>
       ),
-    },
+    }
   ];
 
   const pausedColumns: ColumnDef[] = [
     { key: 'procedure', header: 'Procedimiento' },
     { key: 'project', header: 'Proyecto' },
+    {
+      key: 'startedAt',
+      header: 'Inicio',
+      className: 'px-4 py-3 text-gray-600',
+      render: (execution) => new Date(execution.startedAt).toLocaleDateString(),
+    },
     {
       key: 'progress',
       header: 'Progreso',
@@ -222,6 +237,12 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
   const historyColumns: ColumnDef[] = [
     { key: 'procedure', header: 'Procedimiento' },
     { key: 'project', header: 'Proyecto' },
+    {
+      key: 'startedAt',
+      header: 'Inicio',
+      className: 'px-4 py-3 text-gray-600',
+      render: (execution) => new Date(execution.startedAt).toLocaleDateString(),
+    },
     {
       key: 'state',
       header: 'Estado',
