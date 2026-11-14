@@ -4,6 +4,7 @@ import type { ExecutionListItem } from '../api/executionsApi';
 import type { ExecutionWithDetails } from '../types';
 import { ExecutionDetailModal } from './ExecutionDetailModal';
 import { getExecutionDetails, updateExecutionState } from '../api/executionsApi';
+import { ExecutionTable, ColumnDef } from './ExecutionTable';
 import {
   Play,
   Pause,
@@ -12,6 +13,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Eye,
+  Calendar,
 } from 'lucide-react';
 
 interface ExecutionManagementPanelProps {
@@ -169,6 +171,78 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
     );
   };
 
+  // Definición de columnas para cada tabla centralizada
+  const correctionColumns: ColumnDef[] = [
+    { key: 'procedure', header: 'Procedimiento' },
+    { key: 'project', header: 'Proyecto' },
+    {
+      key: 'correctionDate',
+      header: (
+        <span className="inline-flex items-center" title="Fecha corrección">
+          <Calendar className="w-4 h-4 text-gray-500" />
+        </span>
+      ),
+      className: 'px-4 py-3 text-gray-600',
+      render: (execution) => (
+        <span title="Fecha corrección">
+          {new Date(execution.startedAt).toLocaleDateString()}
+        </span>
+      ),
+    },
+    {
+      key: 'correctionsCount',
+      header: 'Correcciones',
+      className: 'px-4 py-3',
+      render: (_execution) => (
+        <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-bold rounded-xs bg-red-100 text-red-700 border border-red-200">
+          1
+        </span>
+      ),
+    },
+  ];
+
+  const pausedColumns: ColumnDef[] = [
+    { key: 'procedure', header: 'Procedimiento' },
+    { key: 'project', header: 'Proyecto' },
+    {
+      key: 'progress',
+      header: 'Progreso',
+      className: 'px-4 py-3',
+      render: (execution) => (
+        <div>
+          <div className="font-semibold text-gray-800">
+            {execution.completedSteps}/{execution.totalSteps} Pasos
+          </div>
+          <div className="text-gray-400 truncate max-w-xs">{execution.lastProgress}</div>
+        </div>
+      ),
+    },
+  ];
+
+  const historyColumns: ColumnDef[] = [
+    { key: 'procedure', header: 'Procedimiento' },
+    { key: 'project', header: 'Proyecto' },
+    {
+      key: 'state',
+      header: 'Estado',
+      className: 'px-4 py-3',
+      render: (execution) => renderStateBadge(execution.state),
+    },
+    {
+      key: 'progress',
+      header: 'Progreso',
+      className: 'px-4 py-3',
+      render: (execution) => (
+        <div>
+          <div className="font-semibold text-gray-800">
+            {execution.completedSteps}/{execution.totalSteps} Pasos
+          </div>
+          <div className="text-gray-400 truncate max-w-xs">{execution.lastProgress}</div>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
 
@@ -189,57 +263,17 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
           <hr className="border-t border-red-300 mt-2" />
         </div>
 
-        {correctionExecutions.length > 0 ? (
-
-          <table className="w-full text-left text-sm text-gray-600">
-            <thead className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-              <tr>
-                <th className="px-4 py-3">Procedimiento</th>
-                <th className="px-4 py-3">Proyecto</th>
-                <th className="px-4 py-3">Motivo de Corrección</th>
-                <th className="px-4 py-3 text-right w-[1%] whitespace-nowrap">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-red-100 text-xs">
-              {correctionExecutions.map((execution) => (
-                <tr
-                  key={execution.id}
-                  className="hover:bg-red-50/40 transition cursor-pointer"
-                  onClick={() => handleOpenDetails(execution.id)}
-                >
-                  <td className="px-4 py-3">
-                    <div className="font-bold text-gray-900 text-sm hover:text-red-700 transition-colors">
-                      {execution.procedureName}
-                    </div>
-                    <div className="text-[11px] text-gray-400">
-                      Iniciado: {new Date(execution.startedAt).toLocaleDateString()}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-700 font-medium">
-                    {execution.projectName}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="p-2 bg-red-50 rounded-md border border-red-200/80 text-xs text-red-900 font-medium flex items-start gap-1.5 max-w-lg">
-                      <span className="font-bold shrink-0 text-red-800">Observación:</span>
-                      <span>{execution.lastProgress}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-right relative w-[1%] whitespace-nowrap">
-                    {/* Contenedor relativo para aislar la expansión flotante */}
-                    <div className="relative inline-flex items-center justify-end h-7">
-                      {renderActionButtons(execution)}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-        ) : (
-          <div className="p-4 bg-white rounded-xl border border-dashed border-red-200 text-center text-xs text-gray-500">
-            No hay ejecuciones pendientes de corrección actualmente.
-          </div>
-        )}
+        <ExecutionTable
+          data={correctionExecutions}
+          columns={correctionColumns}
+          onRowClick={(execution) => handleOpenDetails(execution.id)}
+          renderActions={renderActionButtons}
+          emptyMessage="No hay ejecuciones pendientes de corrección actualmente."
+          emptyClassName="p-4 bg-white rounded-xl border border-dashed border-red-200 text-center text-xs text-gray-500"
+          rowHoverClassName="hover:bg-red-50/40"
+          divideClassName="divide-red-100"
+          procedureHoverColor="red"
+        />
       </div>
 
       {/* SECCIÓN 2: EN PAUSA (Requerimiento 3: Formato lista-tabla igual a todas las ejecuciones) */}
@@ -258,54 +292,17 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
           <hr className="border-t border-gray-200 mt-2" />
         </div>
 
-        {pausedExecutions.length > 0 ? (
-
-          <table className="w-full text-left text-sm text-gray-600">
-            <thead className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-              <tr>
-                <th className="px-4 py-3">Procedimiento</th>
-                <th className="px-4 py-3">Proyecto</th>
-                <th className="px-4 py-3">Progreso</th>
-                <th className="px-4 py-3 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 text-xs">
-              {pausedExecutions.map((execution) => (
-                <tr
-                  key={execution.id}
-                  className="hover:bg-amber-50/30 transition cursor-pointer"
-                  onClick={() => handleOpenDetails(execution.id)}
-                >
-                  <td className="px-4 py-3">
-                    <div className="font-bold text-gray-900 text-sm hover:text-blue-600 transition-colors">
-                      {execution.procedureName}
-                    </div>
-                    <div className="text-[11px] text-gray-400">
-                      Iniciado: {new Date(execution.startedAt).toLocaleDateString()}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-700 font-medium">
-                    {execution.projectName}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="font-semibold text-gray-800">
-                      {execution.completedSteps}/{execution.totalSteps} Pasos
-                    </div>
-                    <div className="text-gray-400 truncate max-w-xs">{execution.lastProgress}</div>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {renderActionButtons(execution)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-        ) : (
-          <div className="p-4 bg-white rounded-xl border border-dashed border-gray-200 text-center text-xs text-gray-500">
-            No tienes ejecuciones pausadas en este momento.
-          </div>
-        )}
+        <ExecutionTable
+          data={pausedExecutions}
+          columns={pausedColumns}
+          onRowClick={(execution) => handleOpenDetails(execution.id)}
+          renderActions={renderActionButtons}
+          emptyMessage="No tienes ejecuciones pausadas en este momento."
+          emptyClassName="p-4 bg-white rounded-xl border border-dashed border-gray-200 text-center text-xs text-gray-500"
+          rowHoverClassName="hover:bg-amber-50/30"
+          divideClassName="divide-gray-100"
+          procedureHoverColor="blue"
+        />
       </div>
 
       {/* SECCIÓN 3: VISTA GENERAL CON FILTROS (Requerimiento 2: texto plano + cuadrado con número) */}
@@ -436,56 +433,17 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
 
         {/* Tabla formal de la Vista Filtrada */}
         <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto shadow-xs">
-          <table className="w-full text-left text-sm text-gray-600">
-            <thead className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-              <tr>
-                <th className="px-4 py-3">Procedimiento</th>
-                <th className="px-4 py-3">Proyecto</th>
-                <th className="px-4 py-3">Estado</th>
-                <th className="px-4 py-3">Progreso</th>
-                <th className="px-4 py-3 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 text-xs">
-              {filteredExecutions.map((execution) => (
-                <tr
-                  key={execution.id}
-                  className="hover:bg-gray-50/80 transition cursor-pointer"
-                  onClick={() => handleOpenDetails(execution.id)}
-                >
-                  <td className="px-4 py-3">
-                    <div className="font-bold text-gray-900 text-sm">
-                      {execution.procedureName}
-                    </div>
-                    <div className="text-[11px] text-gray-400">
-                      Iniciado: {new Date(execution.startedAt).toLocaleDateString()}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-700 font-medium">
-                    {execution.projectName}
-                  </td>
-                  <td className="px-4 py-3">{renderStateBadge(execution.state)}</td>
-                  <td className="px-4 py-3">
-                    <div className="font-semibold text-gray-800">
-                      {execution.completedSteps}/{execution.totalSteps} Pasos
-                    </div>
-                    <div className="text-gray-400 truncate max-w-xs">{execution.lastProgress}</div>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {renderActionButtons(execution)}
-                  </td>
-                </tr>
-              ))}
-
-              {filteredExecutions.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-400 text-xs">
-                    No se encontraron ejecuciones en este estado.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          <ExecutionTable
+            data={filteredExecutions}
+            columns={historyColumns}
+            onRowClick={(execution) => handleOpenDetails(execution.id)}
+            renderActions={renderActionButtons}
+            emptyMessage="No se encontraron ejecuciones en este estado."
+            emptyClassName="p-8 text-center text-gray-400 text-xs"
+            rowHoverClassName="hover:bg-gray-50/80"
+            divideClassName="divide-gray-200"
+            procedureHoverColor="blue"
+          />
         </div>
       </div>
 
