@@ -55,7 +55,7 @@ export const ExecutionTable: React.FC<ExecutionTableProps> = ({
 
   return (
     <table className="w-full text-left text-sm text-gray-600">
-      <thead className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+      <thead className="bg-rose-100/60 border-b border-rose-200 text-[12px] font-semibold text-rose-900 uppercase tracking-wider">
         <tr>
           {effectiveColumns.map((col) => (
             <th key={col.key} className={col.headerClassName ?? 'px-4 py-3'}>
@@ -88,7 +88,7 @@ export const ExecutionTable: React.FC<ExecutionTableProps> = ({
               if (col.key === 'procedure' || col.key === 'procedureName') {
                 return (
                   <td key={col.key} className={col.className ?? 'px-4 py-3'}>
-                    <div className={`font-bold text-gray-900 text-sm ${hoverColorClass} transition-colors`}>
+                    <div className={`font-semibold text-gray-900 text-sm ${hoverColorClass} transition-colors`}>
                       {execution.procedureName}
                     </div>
                   </td>

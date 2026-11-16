@@ -125,19 +125,6 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
   const renderActionButtons = (execution: ExecutionListItem) => {
     return (
       <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-end gap-1.5 h-7 z-10" onClick={(e) => e.stopPropagation()}>
-        {/* Botón Ver Detalle */}
-        <button
-          type="button"
-          onClick={() => handleOpenDetails(execution.id)}
-          className="group inline-flex items-center justify-center w-7 h-7 hover:w-28 gap-1.5 text-gray-500 hover:text-gray-800 bg-white hover:bg-gray-100 border border-gray-200 rounded-md overflow-hidden transition-all duration-500 ease-in-out cursor-pointer px-0 hover:px-2.5 shadow-sm"
-          title="Ver Detalle"
-        >
-          <Eye className="w-3.5 h-3.5 shrink-0" />
-          <span className="max-w-0 group-hover:max-w-[80px] opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap transition-all duration-500 ease-in-out text-xs font-medium">
-            Detalle
-          </span>
-        </button>
-
         {/* Botón Reanudar */}
         {(execution.state === 'PAUSED' || execution.state === 'HAS_CORRECTIONS') && (
           <button
@@ -173,14 +160,14 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
 
   // Definición de columnas para cada tabla centralizada
   const correctionColumns: ColumnDef[] = [
-    { key: 'procedure', header: 'Procedimiento' },
-    { key: 'project', header: 'Proyecto' },
     {
       key: 'startedAt',
       header: 'Inicio',
       className: 'px-4 py-3 text-gray-600',
       render: (execution) => new Date(execution.startedAt).toLocaleDateString(),
     },
+    { key: 'procedure', header: 'Procedimiento' },
+    { key: 'project', header: 'Proyecto' },
     {
       key: 'endedAt',
       header: 'Último envío',
@@ -211,14 +198,14 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
   ];
 
   const pausedColumns: ColumnDef[] = [
-    { key: 'procedure', header: 'Procedimiento' },
-    { key: 'project', header: 'Proyecto' },
     {
       key: 'startedAt',
       header: 'Inicio',
       className: 'px-4 py-3 text-gray-600',
       render: (execution) => new Date(execution.startedAt).toLocaleDateString(),
     },
+    { key: 'procedure', header: 'Procedimiento' },
+    { key: 'project', header: 'Proyecto' },
     {
       key: 'progress',
       header: 'Progreso',
@@ -235,14 +222,14 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
   ];
 
   const historyColumns: ColumnDef[] = [
-    { key: 'procedure', header: 'Procedimiento' },
-    { key: 'project', header: 'Proyecto' },
     {
       key: 'startedAt',
       header: 'Inicio',
       className: 'px-4 py-3 text-gray-600',
       render: (execution) => new Date(execution.startedAt).toLocaleDateString(),
     },
+    { key: 'procedure', header: 'Procedimiento' },
+    { key: 'project', header: 'Proyecto' },
     {
       key: 'state',
       header: 'Estado',
@@ -269,38 +256,43 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
 
 
       {/* SECCIÓN 1: CORREGIR (Requerimiento 1 & 3: Lista-tabla con motivo de corrección) */}
-      <div className="space-y-3">
+      <div className="rounded-lg bg-rose-50 border border-rose-200/80 p-5 shadow-sm transition-all duration-300 hover:shadow-md space-y-4">
         <div>
           <div className="flex items-center justify-between group relative">
-            <h2 className="cursor-default text-lg font-bold text-black  tracking-wide flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-red-600" />
-              Corregir
-            </h2>
-            {/* Cuadrado con cantidad */}
-            <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-bold rounded-xs bg-red-500 text-white shadow-2xs">
-              {correctionExecutions.length}
-            </span>
+            <div className="flex items-center gap-3">
+              <h2 className="cursor-default text-base font-bold text-gray-900 tracking-wide flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-red-600 transition-transform duration-200 group-hover:scale-105" />
+                Corregir
+              </h2>
+              {/* Badge con cantidad */}
+              <span className="inline-flex items-center justify-center min-w-5 h-5 px-2 text-xs font-semibold rounded-full bg-red-600 text-white shadow-2xs">
+                {correctionExecutions.length}
+              </span>
+            </div>
           </div>
-          <hr className="border-t border-red-300 mt-2" />
+          <hr className="border-t border-rose-200 mt-3" />
         </div>
 
-        <ExecutionTable
-          data={correctionExecutions}
-          columns={correctionColumns}
-          onRowClick={(execution) => handleOpenDetails(execution.id)}
-          renderActions={renderActionButtons}
-          emptyMessage="No hay ejecuciones pendientes de corrección actualmente."
-          emptyClassName="p-4 bg-white rounded-xl border border-dashed border-red-200 text-center text-xs text-gray-500"
-          rowHoverClassName="hover:bg-red-50/40"
-          divideClassName="divide-red-100"
-          procedureHoverColor="red"
-        />
+        {/* Contenedor wrapper para asegurar esquinas redondeadas y bordes limpios en la tabla */}
+        <div className="overflow-hidden rounded-md border border-rose-200/60 bg-white">
+          <ExecutionTable
+            data={correctionExecutions}
+            columns={correctionColumns}
+            onRowClick={(execution) => handleOpenDetails(execution.id)}
+            renderActions={renderActionButtons}
+            emptyMessage="No hay ejecuciones pendientes de corrección actualmente."
+            emptyClassName="p-4 bg-white text-center text-xs text-gray-500"
+            rowHoverClassName="hover:bg-rose-50/40"
+            divideClassName="divide-rose-100"
+            procedureHoverColor="red"
+          />
+        </div>
       </div>
 
       {/* SECCIÓN 2: EN PAUSA (Requerimiento 3: Formato lista-tabla igual a todas las ejecuciones) */}
       <div className="space-y-3 pt-2">
         <div>
-          <div className="group relative flex items-center justify-between">
+          <div className="group relative flex items-center gap-4">
             <h2 className="cursor-default text-lg font-bold text-gray-900  tracking-wide flex items-center gap-2">
               <Pause className="w-5 h-5 text-black" />
               Pausados
@@ -469,53 +461,57 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
       </div>
 
       {/* Modal de Detalle de Ejecución */}
-      {selectedExecutionDetails && (
-        <ExecutionDetailModal
-          execution={selectedExecutionDetails}
-          onClose={() => setSelectedExecutionDetails(null)}
-          onResume={handleResume}
-        />
-      )}
+      {
+        selectedExecutionDetails && (
+          <ExecutionDetailModal
+            execution={selectedExecutionDetails}
+            onClose={() => setSelectedExecutionDetails(null)}
+            onResume={handleResume}
+          />
+        )
+      }
 
       {/* Modal para Confirmar Cancelación de Ejecución */}
-      {cancelCandidate && (
-        <div className="fixed inset-0 z-60 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center gap-3">
-              <span className="p-2 rounded-full bg-red-100 text-red-600">
-                <XCircle className="w-5 h-5" />
-              </span>
-              <div>
-                <h3 className="text-base font-bold text-gray-900">Confirmar Cancelación</h3>
-                <p className="text-xs text-gray-500">ID Ejecución: #{cancelCandidate.id}</p>
+      {
+        cancelCandidate && (
+          <div className="fixed inset-0 z-60 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+              <div className="flex items-center gap-3">
+                <span className="p-2 rounded-full bg-red-100 text-red-600">
+                  <XCircle className="w-5 h-5" />
+                </span>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900">Confirmar Cancelación</h3>
+                  <p className="text-xs text-gray-500">ID Ejecución: #{cancelCandidate.id}</p>
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-600 leading-relaxed bg-gray-50 p-3 rounded-lg border border-gray-100">
+                ¿Está seguro de que desea cancelar la ejecución de{' '}
+                <span className="font-semibold text-gray-900">{cancelCandidate.procedureName}</span>?
+                Esta acción no permitirá nuevas modificaciones, pero quedará registrada permanentemente en la lista de canceladas.
+              </p>
+
+              <div className="flex justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setCancelCandidate(null)}
+                  className="px-4 py-2 text-xs font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                >
+                  Volver
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmCancel}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                >
+                  Confirmar Cancelación
+                </button>
               </div>
             </div>
-
-            <p className="text-xs text-gray-600 leading-relaxed bg-gray-50 p-3 rounded-lg border border-gray-100">
-              ¿Está seguro de que desea cancelar la ejecución de{' '}
-              <span className="font-semibold text-gray-900">{cancelCandidate.procedureName}</span>?
-              Esta acción no permitirá nuevas modificaciones, pero quedará registrada permanentemente en la lista de canceladas.
-            </p>
-
-            <div className="flex justify-end gap-2.5 pt-2">
-              <button
-                type="button"
-                onClick={() => setCancelCandidate(null)}
-                className="px-4 py-2 text-xs font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-              >
-                Volver
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmCancel}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
-              >
-                Confirmar Cancelación
-              </button>
-            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
