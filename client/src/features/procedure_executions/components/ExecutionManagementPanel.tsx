@@ -124,19 +124,28 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
 
   const renderActionButtons = (execution: ExecutionListItem) => {
     return (
-      <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-end gap-1.5 h-7 z-10" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-end gap-1.5 h-8 z-20 bg-white/95 backdrop-blur-xs hover:pl-8 py-4 rounded-lg "
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Botón Reanudar */}
         {(execution.state === 'PAUSED' || execution.state === 'HAS_CORRECTIONS') && (
           <button
             type="button"
             onClick={() => handleResume(execution.id)}
-            className="group inline-flex items-center justify-center w-7 h-7 hover:w-32 gap-1.5 text-white bg-red-700 hover:bg-red-600 rounded-md shadow-xs overflow-hidden transition-all duration-500 ease-in-out cursor-pointer px-0 hover:px-2.5 shadow-sm"
+            className={`group relative inline-flex items-center justify-center w-7 h-7 hover:w-32 text-white rounded-md shadow-xs overflow-hidden transition-all duration-500 ease-in-out cursor-pointer px-2 hover:px-3 ${execution.state === 'PAUSED'
+              ? 'bg-black '
+              : 'bg-red-600 '
+              }`}
             title="Reanudar Ejecución"
           >
-            <Play className="w-3 h-3 fill-current shrink-0" />
-            <span className="max-w-0 group-hover:max-w-[90px] opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap transition-all duration-500 ease-in-out text-xs font-medium">
-              Reanudar
-            </span>
+            {/* gap-0 por defecto, gap-1.5 solo al hacer hover */}
+            <div className="flex items-center justify-center gap-0 group-hover:gap-1.5 w-full transition-all duration-500">
+              <Play className="w-3 h-3 fill-current shrink-0" />
+              <span className="max-w-0 group-hover:max-w-[90px] opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap transition-all duration-500 ease-in-out text-xs font-medium text-left">
+                Reanudar
+              </span>
+            </div>
           </button>
         )}
 
@@ -145,13 +154,16 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
           <button
             type="button"
             onClick={() => setCancelCandidate(execution)}
-            className="group inline-flex items-center justify-center w-7 h-7 hover:w-32 gap-1.5 text-gray-600 hover:text-red-700 bg-white hover:bg-red-50 border border-gray-200 hover:border-red-200 rounded-md overflow-hidden transition-all duration-500 ease-in-out cursor-pointer px-0 hover:px-2.5 shadow-sm"
+            className="group relative inline-flex items-center justify-center w-7 h-7 hover:w-32 text-gray-600 hover:text-red-700 bg-white hover:bg-red-50 border border-gray-200 hover:border-red-200 rounded-md overflow-hidden transition-all duration-500 ease-in-out cursor-pointer px-2 hover:px-3 shadow-2xs"
             title="Cancelar Ejecución"
           >
-            <XCircle className="w-3 h-3 shrink-0" />
-            <span className="max-w-0 group-hover:max-w-[90px] opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap transition-all duration-500 ease-in-out text-xs font-medium">
-              Cancelar
-            </span>
+            {/* gap-0 por defecto, gap-1.5 solo al hacer hover */}
+            <div className="flex items-center justify-center gap-0 group-hover:gap-1.5 w-full transition-all duration-500">
+              <XCircle className="w-3 h-3 shrink-0" />
+              <span className="max-w-0 group-hover:max-w-[90px] opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap transition-all duration-500 ease-in-out text-xs font-medium text-left">
+                Cancelar
+              </span>
+            </div>
           </button>
         )}
       </div>
@@ -169,13 +181,15 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
     { key: 'procedure', header: 'Procedimiento' },
     { key: 'project', header: 'Proyecto' },
     {
-      key: 'endedAt',
-      header: 'Último envío',
-      className: 'px-4 py-3 text-gray-600',
-      render: (execution) =>
-        execution.endedAt ? new Date(execution.endedAt).toLocaleDateString() : '-',
+      key: 'progress',
+      header: 'Progreso',
+      className: 'px-4 py-3',
+      render: () => (
+        <span className="text-red-800 font-semibold">
+          0/3 Correcciones Resueltas
+        </span>
+      ),
     },
-
     {
       key: 'evaluated',
       header: 'Evaluado',
@@ -185,16 +199,6 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
           ? new Date(execution.endedAt).toLocaleDateString()
           : new Date(execution.startedAt).toLocaleDateString(),
     },
-    {
-      key: 'progress',
-      header: 'Progreso',
-      className: 'px-4 py-3',
-      render: () => (
-        <span className="text-gray-800 font-bold">
-          0/3 Correcciones Resueltas
-        </span>
-      ),
-    }
   ];
 
   const pausedColumns: ColumnDef[] = [
@@ -212,10 +216,9 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
       className: 'px-4 py-3',
       render: (execution) => (
         <div>
-          <div className="font-semibold text-gray-800">
+          <div className="font-semibold text-gray-900">
             {execution.completedSteps}/{execution.totalSteps} Pasos
           </div>
-          <div className="text-gray-400 truncate max-w-xs">{execution.lastProgress}</div>
         </div>
       ),
     },

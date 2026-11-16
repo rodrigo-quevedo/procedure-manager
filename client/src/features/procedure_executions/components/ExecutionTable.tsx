@@ -97,9 +97,24 @@ export const ExecutionTable: React.FC<ExecutionTableProps> = ({
               }
 
               if (col.key === 'procedure' || col.key === 'procedureName') {
+                const getProcedureStyle = () => {
+                  switch (execution.state) {
+                    case 'HAS_CORRECTIONS':
+                    case 'PAUSED':
+                      return 'font-semibold text-gray-900';
+                    case 'PENDING_EVALUATION':
+                      return 'font-normal text-gray-500';
+                    case 'CANCELLED':
+                    case 'APPROVED_FINISHED':
+                      return 'font-normal text-gray-500';
+                    default:
+                      return 'font-normal text-gray-700';
+                  }
+                };
+
                 return (
                   <td key={col.key} className={col.className ?? 'px-4 py-3'}>
-                    <div className={`font-semibold text-gray-900 text-sm ${hoverColorClass} transition-colors`}>
+                    <div className={`${getProcedureStyle()} text-sm ${hoverColorClass} transition-colors`}>
                       {execution.procedureName}
                     </div>
                   </td>

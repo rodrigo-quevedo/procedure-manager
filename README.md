@@ -1,4 +1,4 @@
-> 🌐 **Idioma / Language:** [🇪🇸 Español](#-español) | [🇬🇧 English](#-english)
+> 🌐 **Idioma / Language:** [🇪🇸 Español](#-español) | [🇺🇸 English](#-english)
 
 <a name="-español"></a>
 ## 🇪🇸 Español
