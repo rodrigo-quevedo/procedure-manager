@@ -18,7 +18,10 @@ interface ExecutionTableProps {
   emptyClassName?: string;
   rowHoverClassName?: string;
   divideClassName?: string;
-  procedureHoverColor?: 'red' | 'blue';
+  procedureHoverColor?: 'red' | 'blue' | 'indigo' | 'amber' | 'emerald';
+  // Nuevas props para control total de colores desde el componente padre
+  headerClassName?: string;
+  headerTextClassName?: string;
 }
 
 export const ExecutionTable: React.FC<ExecutionTableProps> = ({
@@ -27,10 +30,12 @@ export const ExecutionTable: React.FC<ExecutionTableProps> = ({
   onRowClick,
   renderActions,
   emptyMessage = 'No hay ejecuciones disponibles.',
-  emptyClassName = 'p-4 bg-white rounded-xl border border-dashed border-red-200 text-center text-xs text-gray-500',
-  rowHoverClassName = 'hover:bg-red-50/40',
-  divideClassName = 'divide-red-100',
+  emptyClassName = 'p-4 bg-white rounded-xl border border-dashed border-gray-200 text-center text-xs text-gray-500',
+  rowHoverClassName = 'hover:bg-gray-50/80',
+  divideClassName = 'divide-gray-100',
   procedureHoverColor = 'red',
+  headerClassName = 'bg-gray-50/80 border-b border-gray-200',
+  headerTextClassName = 'text-gray-600',
 }) => {
   if (data.length === 0) {
     return (
@@ -40,7 +45,6 @@ export const ExecutionTable: React.FC<ExecutionTableProps> = ({
     );
   }
 
-  // Columnas básicas por defecto: procedimiento, proyecto, inicio (fecha) y acciones (si renderActions existe)
   const defaultColumns: ColumnDef<ExecutionListItem>[] = [
     { key: 'procedure', header: 'Procedimiento' },
     { key: 'project', header: 'Proyecto' },
@@ -49,13 +53,20 @@ export const ExecutionTable: React.FC<ExecutionTableProps> = ({
 
   const effectiveColumns = columns ?? defaultColumns;
 
-  const hoverColorClass = procedureHoverColor === 'blue'
-    ? 'hover:text-blue-600'
-    : 'hover:text-red-700';
+  // Mapeo escalable para el color de hover del texto del procedimiento
+  const hoverColorMap = {
+    red: 'hover:text-red-700',
+    blue: 'hover:text-blue-600',
+    indigo: 'hover:text-indigo-600',
+    amber: 'hover:text-amber-700',
+    emerald: 'hover:text-emerald-700',
+  };
+
+  const hoverColorClass = hoverColorMap[procedureHoverColor] ?? 'hover:text-red-700';
 
   return (
     <table className="w-full text-left text-sm text-gray-600">
-      <thead className="bg-rose-100/60 border-b border-rose-200 text-[12px] font-semibold text-rose-900 uppercase tracking-wider">
+      <thead className={`${headerClassName} text-[12px] font-semibold ${headerTextClassName} uppercase tracking-wider`}>
         <tr>
           {effectiveColumns.map((col) => (
             <th key={col.key} className={col.headerClassName ?? 'px-4 py-3'}>

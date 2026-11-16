@@ -130,7 +130,7 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
           <button
             type="button"
             onClick={() => handleResume(execution.id)}
-            className="group inline-flex items-center justify-center w-7 h-7 hover:w-32 gap-1.5 text-white bg-red-600 hover:bg-red-700 rounded-md shadow-xs overflow-hidden transition-all duration-500 ease-in-out cursor-pointer px-0 hover:px-2.5 shadow-sm"
+            className="group inline-flex items-center justify-center w-7 h-7 hover:w-32 gap-1.5 text-white bg-red-700 hover:bg-red-600 rounded-md shadow-xs overflow-hidden transition-all duration-500 ease-in-out cursor-pointer px-0 hover:px-2.5 shadow-sm"
             title="Reanudar Ejecución"
           >
             <Play className="w-3 h-3 fill-current shrink-0" />
@@ -190,7 +190,7 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
       header: 'Progreso',
       className: 'px-4 py-3',
       render: () => (
-        <span className="text-gray-800 font-medium">
+        <span className="text-gray-800 font-bold">
           0/3 Correcciones Resueltas
         </span>
       ),
@@ -229,34 +229,31 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
       render: (execution) => new Date(execution.startedAt).toLocaleDateString(),
     },
     { key: 'procedure', header: 'Procedimiento' },
-    { key: 'project', header: 'Proyecto' },
     {
       key: 'state',
       header: 'Estado',
-      className: 'px-4 py-3',
-      render: (execution) => renderStateBadge(execution.state),
-    },
-    {
-      key: 'progress',
-      header: 'Progreso',
-      className: 'px-4 py-3',
+      // Usamos flex y justify-center para asegurar que el badge quede perfectamente centrado
+      headerClassName: 'text-center px-4 py-3',
+      className: 'text-center px-4 py-3',
       render: (execution) => (
-        <div>
-          <div className="font-semibold text-gray-800">
-            {execution.completedSteps}/{execution.totalSteps} Pasos
-          </div>
-          <div className="text-gray-400 truncate max-w-xs">{execution.lastProgress}</div>
+        <div className="flex justify-center">
+          {renderStateBadge(execution.state)}
         </div>
       ),
+    },
+    {
+      key: 'project',
+      header: 'Proyecto',
+      headerClassName: 'text-right px-4 py-3',
+      className: 'text-right px-4 py-3',
     },
   ];
 
   return (
     <div className="space-y-6">
 
-
-      {/* SECCIÓN 1: CORREGIR (Requerimiento 1 & 3: Lista-tabla con motivo de corrección) */}
-      <div className="rounded-lg bg-rose-50 border border-rose-200/80 p-5 shadow-sm transition-all duration-300 hover:shadow-md space-y-4">
+      {/* Seccion 1 */}
+      <div className="rounded-lg bg-rose-50 border border-rose-200/80 p-5 shadow-sm transition-all duration-300 hover:shadow-md space-y-4 -mx-6 px-6">
         <div>
           <div className="flex items-center justify-between group relative">
             <div className="flex items-center gap-3">
@@ -264,7 +261,6 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
                 <AlertCircle className="w-5 h-5 text-red-600 transition-transform duration-200 group-hover:scale-105" />
                 Corregir
               </h2>
-              {/* Badge con cantidad */}
               <span className="inline-flex items-center justify-center min-w-5 h-5 px-2 text-xs font-semibold rounded-full bg-red-600 text-white shadow-2xs">
                 {correctionExecutions.length}
               </span>
@@ -273,7 +269,6 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
           <hr className="border-t border-rose-200 mt-3" />
         </div>
 
-        {/* Contenedor wrapper para asegurar esquinas redondeadas y bordes limpios en la tabla */}
         <div className="overflow-hidden rounded-md border border-rose-200/60 bg-white">
           <ExecutionTable
             data={correctionExecutions}
@@ -282,6 +277,8 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
             renderActions={renderActionButtons}
             emptyMessage="No hay ejecuciones pendientes de corrección actualmente."
             emptyClassName="p-4 bg-white text-center text-xs text-gray-500"
+            headerClassName="bg-rose-100/60 border-b border-rose-200"
+            headerTextClassName="text-rose-900"
             rowHoverClassName="hover:bg-rose-50/40"
             divideClassName="divide-rose-100"
             procedureHoverColor="red"
@@ -289,33 +286,41 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
         </div>
       </div>
 
-      {/* SECCIÓN 2: EN PAUSA (Requerimiento 3: Formato lista-tabla igual a todas las ejecuciones) */}
-      <div className="space-y-3 pt-2">
+      {/* SECCIÓN 2: EN PAUSA */}
+      <div className="rounded-lg bg-gray-50/80 border border-gray-200 p-5 shadow-2xs transition-all duration-300 hover:shadow-sm space-y-4 -mx-6 px-6">
         <div>
-          <div className="group relative flex items-center gap-4">
-            <h2 className="cursor-default text-lg font-bold text-gray-900  tracking-wide flex items-center gap-2">
-              <Pause className="w-5 h-5 text-black" />
-              Pausados
-            </h2>
-            {/* Cuadrado con cantidad */}
-            <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-bold rounded-xs bg-black text-white shadow-2xs">
-              {pausedExecutions.length}
-            </span>
+          <div className="flex items-center justify-between group relative">
+            <div className="flex items-center gap-3">
+              <h2 className="cursor-default text-base font-bold text-gray-900 tracking-wide flex items-center gap-2">
+                <Pause className="w-5 h-5 text-black transition-transform duration-200 group-hover:scale-105" />
+                Pausados
+              </h2>
+              {/* Badge con cantidad en negro puro */}
+              <span className="inline-flex items-center justify-center min-w-5 h-5 px-2 text-xs font-semibold rounded-full bg-black text-white shadow-2xs">
+                {pausedExecutions.length}
+              </span>
+            </div>
           </div>
-          <hr className="border-t border-gray-200 mt-2" />
+          <hr className="border-t border-gray-200 mt-3" />
         </div>
 
-        <ExecutionTable
-          data={pausedExecutions}
-          columns={pausedColumns}
-          onRowClick={(execution) => handleOpenDetails(execution.id)}
-          renderActions={renderActionButtons}
-          emptyMessage="No tienes ejecuciones pausadas en este momento."
-          emptyClassName="p-4 bg-white rounded-xl border border-dashed border-gray-200 text-center text-xs text-gray-500"
-          rowHoverClassName="hover:bg-amber-50/30"
-          divideClassName="divide-gray-100"
-          procedureHoverColor="blue"
-        />
+        {/* Contenedor wrapper limpio con bordes sutiles en escala de grises */}
+        <div className="overflow-hidden rounded-md border border-gray-200 bg-white">
+          <ExecutionTable
+            data={pausedExecutions}
+            columns={pausedColumns}
+            onRowClick={(execution) => handleOpenDetails(execution.id)}
+            renderActions={renderActionButtons}
+            emptyMessage="No tienes ejecuciones pausadas en este momento."
+            emptyClassName="p-4 bg-white text-center text-xs text-gray-500"
+            // Propiedades estilizadas para la temática blanco y negro minimalista
+            headerClassName="bg-gray-100/70 border-b border-gray-200"
+            headerTextClassName="text-gray-800"
+            rowHoverClassName="hover:bg-gray-50"
+            divideClassName="divide-gray-100"
+            procedureHoverColor="blue"
+          />
+        </div>
       </div>
 
       {/* SECCIÓN 3: VISTA GENERAL CON FILTROS (Requerimiento 2: texto plano + cuadrado con número) */}
@@ -323,17 +328,10 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
         <div>
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-gray-900">Historial de Ejecuciones</h2>
-            {/* <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-              <span>Total listadas</span>
-              <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 text-[11px] font-bold rounded-xs bg-slate-800 text-white">
-                {filteredExecutions.length}
-              </span>
-            </div> */}
           </div>
           <hr className="border-t border-gray-200 mt-2" />
         </div>
 
-        {/* Pestañas de Filtro por Estado (Requerimiento 2: Nombre en texto plano + cuadrado con número del color de la categoría) */}
         <div className="flex flex-wrap gap-2 pb-1">
           {/* Todas */}
           <button
@@ -353,41 +351,6 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
             </span>
           </button>
 
-          {/* Corregir */}
-          {/* <button
-            type="button"
-            onClick={() => setActiveTab('HAS_CORRECTIONS')}
-            className={`relative group inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border ${activeTab === 'HAS_CORRECTIONS'
-              ? 'bg-red-600 text-white border-red-600 shadow-xs'
-              : 'bg-white text-gray-700 border-gray-200 hover:bg-red-50 hover:text-red-700'
-              }`}
-          >
-            <span>Corregir</span>
-            <span
-              className={`inline-flex items-center justify-center min-w-4.5 h-4.5 px-1 rounded-xs text-[11px] font-bold ${activeTab === 'HAS_CORRECTIONS' ? 'bg-red-700 text-white' : 'bg-red-500 text-white'
-                }`}
-            >
-              {correctionExecutions.length}
-            </span>
-          </button> */}
-
-          {/* En Pausa */}
-          {/* <button
-            type="button"
-            onClick={() => setActiveTab('PAUSED')}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border ${activeTab === 'PAUSED'
-              ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
-              : 'bg-white text-gray-700 border-gray-200 hover:bg-amber-50 hover:text-amber-800'
-              }`}
-          >
-            <span>En Pausa</span>
-            <span
-              className={`inline-flex items-center justify-center min-w-4.5 h-4.5 px-1 rounded-xs text-[11px] font-bold ${activeTab === 'PAUSED' ? 'bg-amber-700 text-white' : 'bg-amber-500 text-white'
-                }`}
-            >
-              {pausedExecutions.length}
-            </span>
-          </button> */}
 
           {/* Evaluación Pendiente */}
           <button
@@ -450,7 +413,6 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
             data={filteredExecutions}
             columns={historyColumns}
             onRowClick={(execution) => handleOpenDetails(execution.id)}
-            renderActions={renderActionButtons}
             emptyMessage="No se encontraron ejecuciones en este estado."
             emptyClassName="p-8 text-center text-gray-400 text-xs"
             rowHoverClassName="hover:bg-gray-50/80"
