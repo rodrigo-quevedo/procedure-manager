@@ -9,6 +9,7 @@ import type {
   Input,
   Procedure,
   Execution,
+  ExecutionState,
 } from '@shared/types';
 import { StepNavigation } from './StepNavigation';
 import { StepDetailView } from './StepDetailView';
@@ -109,6 +110,31 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
   const [isSaving, setIsSaving] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showBackModal, setShowBackModal] = useState(false);
+
+  // ── Req 1: Derivar el modo de vista desde procedure.state ──────────────────
+  // Si el procedimiento está en DRAFT (en creación) → modo creación+ejecución.
+  // Para cualquier otro estado (DEVIATION, PENDING_APPROVAL, APPROVED) → solo ejecución.
+  const procedureState = initialProcedure?.state ?? 'DRAFT';
+  const isCreationMode = mode === 'CREATION_AND_EXECUTION' && procedureState === 'DRAFT';
+  const isExecutionOnly = !isCreationMode;
+
+  // ── Req 4: Qué acciones están disponibles según el estado de la ejecución ──
+  // canPause:   ACTIVE | PAUSED | HAS_CORRECTIONS
+  // canGoBack:  PENDING_EVALUATION | APPROVED_FINISHED | CANCELLED
+  const executionState: ExecutionState | null = execution?.state ?? null;
+  const canPause =
+    executionState === 'ACTIVE' ||
+    executionState === 'PAUSED' ||
+    executionState === 'HAS_CORRECTIONS';
+  const canGoBack =
+    executionState === 'PENDING_EVALUATION' ||
+    executionState === 'APPROVED_FINISHED' ||
+    executionState === 'CANCELLED';
+
+  // "hasUnsavedChanges" para el modal de Volver (Req 3):
+  // hay cambios sin guardar si se llenaron inputs pero no se guardó progreso
+  const hasUnsavedChanges = !hasSavedProgress && Object.keys(inputsMap).length > 0;
 
   // Ensure an active execution instance exists
   useEffect(() => {
@@ -269,7 +295,12 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
       if (execution) {
         execution.idProcedure = savedProc.id;
         execution.idProject = selectedProjectId;
-        await updateExecutionState(execution.id, 'ACTIVE');
+        // ── Req 2 / Req 3: No sobreescribir el estado de la ejecución al guardar.
+        // Solo marcar como ACTIVE si está en modo creación y aún no tiene estado definitivo.
+        if (execution.state === 'ACTIVE') {
+          await updateExecutionState(execution.id, 'ACTIVE');
+        }
+        // HAS_CORRECTIONS, PAUSED, PENDING_EVALUATION, etc. → no cambiar
       }
 
       setHasSavedProgress(true);
@@ -302,12 +333,20 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
   };
 
   // Pause execution (HU-011 CA 3)
+  // ── Req 2: Al pausar con estado HAS_CORRECTIONS, mantener ese estado ────────
   const handlePause = async () => {
     if (!execution) return;
     await handleSaveProgress();
-    await updateExecutionState(execution.id, 'PAUSED');
+    // Si ya tenía correcciones pendientes, NO cambiar a PAUSED; conservar HAS_CORRECTIONS
+    if (execution.state !== 'HAS_CORRECTIONS') {
+      await updateExecutionState(execution.id, 'PAUSED');
+    }
     if (onSuccessFeedback) {
-      onSuccessFeedback('Ejecución pausada y progreso guardado.');
+      onSuccessFeedback(
+        execution.state === 'HAS_CORRECTIONS'
+          ? 'Progreso guardado. La ejecución sigue en Corrección Pendiente.'
+          : 'Ejecución pausada y progreso guardado.'
+      );
     }
     if (onBack) onBack();
   };
@@ -323,7 +362,27 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
     if (onBack) onBack();
   };
 
-  const isExecutionOnly = mode === 'EXECUTE_EXISTING';
+  // ── Req 3: Volver con confirmación si hay cambios sin guardar ──────────────
+  const handleBackRequest = () => {
+    if (hasUnsavedChanges) {
+      setShowBackModal(true);
+    } else {
+      if (onBack) onBack();
+    }
+  };
+
+  const handleBackWithoutSaving = () => {
+    // Volver sin cambiar el estado de la ejecución
+    setShowBackModal(false);
+    if (onBack) onBack();
+  };
+
+  const handleBackWithSaving = async () => {
+    // Guardar progreso y volver, sin cambiar el estado de la ejecución
+    setShowBackModal(false);
+    await handleSaveProgress();
+    if (onBack) onBack();
+  };
 
   return (
     <div className="flex h-screen bg-white text-gray-800 font-sans overflow-hidden">
@@ -332,13 +391,15 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
         <div>
           {/* Header */}
           <div className="mb-6 flex items-center justify-between">
+            {/* ── Req 1: Etiqueta diferenciada según procedure.state ── */}
             <span className="text-sm font-bold text-red-600 tracking-wide bg-red-50 border border-red-200 px-3 py-1 rounded-md shadow-xs">
-              {isExecutionOnly ? 'Ejecución de Procedimiento' : 'Nuevo Procedimiento'}
+              {isCreationMode ? 'Nuevo Procedimiento' : 'Ejecución de Procedimiento'}
             </span>
-            {onBack && (
+            {/* ── Req 4: "Volver" en header solo para modo creación o estados canGoBack ── */}
+            {onBack && (isCreationMode || canGoBack) && (
               <button
                 type="button"
-                onClick={onBack}
+                onClick={handleBackRequest}
                 className="text-xs text-gray-500 hover:text-red-600 cursor-pointer"
               >
                 Volver
@@ -485,29 +546,69 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
           </div>
         </div>
 
-        {/* Action Buttons: Guardar & Enviar (HU-007 CA 10 & 11 / HU-009 CA 4) */}
+        {/* Action Buttons según modo y estado de ejecución */}
         <div className="space-y-2 pt-4 border-t border-gray-200">
-          <button
-            type="button"
-            onClick={handleSaveProgress}
-            disabled={isSaving}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 rounded text-sm transition-colors shadow-xs cursor-pointer disabled:opacity-50"
-          >
-            {isSaving ? 'Guardando...' : 'Guardar Procedimiento'}
-          </button>
-          <button
-            type="button"
-            onClick={handleSendForEvaluation}
-            disabled={!hasSavedProgress || isSending}
-            title={!hasSavedProgress ? 'Primero guarde el procedimiento para habilitar el envío' : ''}
-            className={`w-full py-1.5 rounded text-xs transition-colors cursor-pointer ${
-              hasSavedProgress
-                ? 'bg-slate-900 hover:bg-black text-white font-semibold shadow-xs'
-                : 'border border-gray-200 hover:bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            {isSending ? 'Enviando...' : 'Enviar'}
-          </button>
+          {/* ── Req 4: Botón Pausar → solo si canPause ── */}
+          {canPause && (
+            <button
+              type="button"
+              onClick={handlePause}
+              disabled={isSaving}
+              className="w-full bg-gray-800 hover:bg-black text-white font-medium py-2 rounded text-sm transition-colors shadow-xs cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+              </svg>
+              {isSaving ? 'Guardando...' : (
+                executionState === 'HAS_CORRECTIONS'
+                  ? 'Guardar y Salir'
+                  : 'Pausar Ejecución'
+              )}
+            </button>
+          )}
+
+          {/* ── Req 4: Botón Volver → solo si canGoBack ── */}
+          {canGoBack && (
+            <button
+              type="button"
+              onClick={handleBackRequest}
+              className="w-full border border-gray-300 hover:bg-gray-100 text-gray-700 font-medium py-2 rounded text-sm transition-colors cursor-pointer flex items-center justify-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Volver
+            </button>
+          )}
+
+          {/* Guardar Procedimiento (solo en modo creación o ejecución activa/con correcciones) */}
+          {(isCreationMode || canPause) && (
+            <button
+              type="button"
+              onClick={handleSaveProgress}
+              disabled={isSaving}
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 rounded text-sm transition-colors shadow-xs cursor-pointer disabled:opacity-50"
+            >
+              {isSaving ? 'Guardando...' : (isCreationMode ? 'Guardar Procedimiento' : 'Guardar Progreso')}
+            </button>
+          )}
+
+          {/* Enviar para evaluación (solo en modo creación) */}
+          {isCreationMode && (
+            <button
+              type="button"
+              onClick={handleSendForEvaluation}
+              disabled={!hasSavedProgress || isSending}
+              title={!hasSavedProgress ? 'Primero guarde el procedimiento para habilitar el envío' : ''}
+              className={`w-full py-1.5 rounded text-xs transition-colors cursor-pointer ${
+                hasSavedProgress
+                  ? 'bg-slate-900 hover:bg-black text-white font-semibold shadow-xs'
+                  : 'border border-gray-200 hover:bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              {isSending ? 'Enviando...' : 'Enviar'}
+            </button>
+          )}
         </div>
       </aside>
 
@@ -571,6 +672,53 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
               >
                 Confirmar Cancelación
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Req 3: Modal de confirmación al Volver con cambios sin guardar ── */}
+      {showBackModal && (
+        <div className="fixed inset-0 z-60 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <span className="p-2 rounded-full bg-amber-100 text-amber-600">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+              </span>
+              <div>
+                <h3 className="text-base font-bold text-gray-900">Cambios sin guardar</h3>
+                <p className="text-xs text-gray-500">Hay progreso que no fue guardado.</p>
+              </div>
+            </div>
+            <p className="text-xs text-gray-600 leading-relaxed bg-amber-50 p-3 rounded-lg border border-amber-100">
+              Tienes cambios pendientes en esta ejecución. ¿Qué deseas hacer antes de volver?
+              El estado de la ejecución <span className="font-semibold text-gray-900">no cambiará</span> al volver.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowBackModal(false)}
+                className="px-4 py-2 text-xs font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleBackWithoutSaving}
+                className="px-4 py-2 text-xs font-medium text-gray-700 hover:text-gray-900 border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+              >
+                No guardar y Volver
+              </button>
+              <button
+                type="button"
+                onClick={handleBackWithSaving}
+                disabled={isSaving}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {isSaving ? 'Guardando...' : 'Guardar y Volver'}
               </button>
             </div>
           </div>

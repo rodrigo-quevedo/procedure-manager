@@ -72,7 +72,12 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
   };
 
   const handleResume = async (executionId: number) => {
-    await updateExecutionState(executionId, 'ACTIVE');
+    // ── Req 2: Si la ejecución tiene correcciones pendientes, NO cambiar a ACTIVE.
+    // Mantener HAS_CORRECTIONS para que al pausar dentro de la vista conserve ese estado.
+    const target = executions.find((e) => e.id === executionId);
+    if (target?.state !== 'HAS_CORRECTIONS') {
+      await updateExecutionState(executionId, 'ACTIVE');
+    }
     if (selectedExecutionDetails?.id === executionId) {
       setSelectedExecutionDetails(null);
     }
