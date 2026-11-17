@@ -273,6 +273,7 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
       ...prev,
       [fieldId]: input,
     }));
+    setHasSavedProgress(false);
   };
 
   // Save progress (HU-007 CA 10 / HU-009 CA 4)
@@ -548,26 +549,41 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
 
         {/* Action Buttons según modo y estado de ejecución */}
         <div className="space-y-2 pt-4 border-t border-gray-200">
-          {/* ── Req 4: Botón Pausar → solo si canPause ── */}
-          {canPause && (
-            <button
-              type="button"
-              onClick={handlePause}
-              disabled={isSaving}
-              className="w-full bg-gray-800 hover:bg-black text-white font-medium py-2 rounded text-sm transition-colors shadow-xs cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-              </svg>
-              {isSaving ? 'Guardando...' : (
-                executionState === 'HAS_CORRECTIONS'
-                  ? 'Guardar y Salir'
-                  : 'Pausar Ejecución'
-              )}
-            </button>
+          {/* ── Botones Guardar y Enviar: visibles en modo creación o cuando se puede pausar ── */}
+          {(isCreationMode || canPause) && (
+            <>
+              {/* Botón Guardar (arriba) */}
+              <button
+                type="button"
+                onClick={handleSaveProgress}
+                disabled={isSaving || hasSavedProgress}
+                className={`w-full font-medium py-2 rounded text-sm transition-colors shadow-xs ${
+                  !hasSavedProgress && !isSaving
+                    ? 'bg-red-600 hover:bg-red-700 text-white border border-red-600 cursor-pointer'
+                    : 'bg-white text-red-600 border border-red-300 opacity-60 cursor-not-allowed hover:bg-white'
+                }`}
+              >
+                {isSaving ? 'Guardando...' : hasSavedProgress ? 'Guardado ✓' : 'Guardar'}
+              </button>
+
+              {/* Botón Enviar (abajo) */}
+              <button
+                type="button"
+                onClick={handleSendForEvaluation}
+                disabled={!hasSavedProgress || isSending}
+                title={!hasSavedProgress ? 'Primero guarde para habilitar el envío' : ''}
+                className={`w-full py-2 rounded text-sm font-medium transition-colors shadow-xs ${
+                  hasSavedProgress && !isSending
+                    ? 'bg-red-600 hover:bg-red-700 text-white border border-red-600 cursor-pointer'
+                    : 'bg-white text-red-600 border border-red-300 opacity-60 cursor-not-allowed hover:bg-white'
+                }`}
+              >
+                {isSending ? 'Enviando...' : 'Enviar'}
+              </button>
+            </>
           )}
 
-          {/* ── Req 4: Botón Volver → solo si canGoBack ── */}
+          {/* ── Botón Volver: visible cuando canGoBack ── */}
           {canGoBack && (
             <button
               type="button"
@@ -578,35 +594,6 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               Volver
-            </button>
-          )}
-
-          {/* Guardar Procedimiento (solo en modo creación o ejecución activa/con correcciones) */}
-          {(isCreationMode || canPause) && (
-            <button
-              type="button"
-              onClick={handleSaveProgress}
-              disabled={isSaving}
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 rounded text-sm transition-colors shadow-xs cursor-pointer disabled:opacity-50"
-            >
-              {isSaving ? 'Guardando...' : (isCreationMode ? 'Guardar Procedimiento' : 'Guardar Progreso')}
-            </button>
-          )}
-
-          {/* Enviar para evaluación (solo en modo creación) */}
-          {isCreationMode && (
-            <button
-              type="button"
-              onClick={handleSendForEvaluation}
-              disabled={!hasSavedProgress || isSending}
-              title={!hasSavedProgress ? 'Primero guarde el procedimiento para habilitar el envío' : ''}
-              className={`w-full py-1.5 rounded text-xs transition-colors cursor-pointer ${
-                hasSavedProgress
-                  ? 'bg-slate-900 hover:bg-black text-white font-semibold shadow-xs'
-                  : 'border border-gray-200 hover:bg-gray-100 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              {isSending ? 'Enviando...' : 'Enviar'}
             </button>
           )}
         </div>
