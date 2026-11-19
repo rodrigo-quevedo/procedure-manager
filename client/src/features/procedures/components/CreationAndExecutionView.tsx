@@ -112,6 +112,31 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showBackModal, setShowBackModal] = useState(false);
 
+  // ── Pasos completados: persiste en localStorage por ejecución ─────────────
+  const [completedStepIds, setCompletedStepIds] = useState<Set<number>>(() => {
+    if (!initialExecution) return new Set();
+    const raw = localStorage.getItem(`pm_completed_steps_${initialExecution.id}`);
+    if (!raw) return new Set();
+    try { return new Set(JSON.parse(raw) as number[]); } catch { return new Set(); }
+  });
+
+  const handleToggleStepCompleted = (stepId: number) => {
+    setCompletedStepIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(stepId)) {
+        next.delete(stepId);
+      } else {
+        next.add(stepId);
+      }
+      // Persist to localStorage keyed by execution id
+      const execId = execution?.id ?? initialExecution?.id;
+      if (execId) {
+        localStorage.setItem(`pm_completed_steps_${execId}`, JSON.stringify([...next]));
+      }
+      return next;
+    });
+  };
+
   // ── Req 1: Derivar el modo de vista desde procedure.state ──────────────────
   // Si el procedimiento está en DRAFT (en creación) → modo creación+ejecución.
   // Para cualquier otro estado (DEVIATION, PENDING_APPROVAL, APPROVED) → solo ejecución.
@@ -415,6 +440,7 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
             onSelectStep={setSelectedStepId}
             onReorderSteps={handleReorderSteps}
             canReorder={!isExecutionOnly}
+            completedStepIds={completedStepIds}
           />
 
           {/* Project Selection (HU-007 CA 1) */}
@@ -609,6 +635,8 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
             inputsMap={inputsMap}
             isExecutable={true}
             canEditDefinition={!isExecutionOnly}
+            isCompleted={completedStepIds.has(currentStep.id)}
+            onToggleCompleted={isExecutionOnly ? () => handleToggleStepCompleted(currentStep.id) : undefined}
             onUpdateStep={handleUpdateStep}
             onDeleteStep={handleDeleteStep}
             onCreateStep={handleCreateStep}

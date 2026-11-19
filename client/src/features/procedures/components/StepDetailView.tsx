@@ -9,6 +9,8 @@ interface StepDetailViewProps {
   inputsMap?: Record<number, Input>;
   isExecutable?: boolean;
   canEditDefinition?: boolean;
+  isCompleted?: boolean;
+  onToggleCompleted?: () => void;
   onUpdateStep?: (updated: Step) => void;
   onDeleteStep?: (stepId: number) => void;
   onCreateStep?: () => void;
@@ -28,6 +30,8 @@ export const StepDetailView: React.FC<StepDetailViewProps> = ({
   inputsMap = {},
   isExecutable = true,
   canEditDefinition = true,
+  isCompleted = false,
+  onToggleCompleted,
   onUpdateStep,
   onDeleteStep,
   onCreateStep,
@@ -132,28 +136,60 @@ export const StepDetailView: React.FC<StepDetailViewProps> = ({
             )}
           </div>
 
-          {canEditDefinition && (
-            <div className="flex items-center gap-2.5">
-              {onCreateStep && (
-                <button
-                  type="button"
-                  onClick={onCreateStep}
-                  className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-xs hover:shadow-sm transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
-                >
-                  <span className="text-sm leading-none font-black">+</span> Crear Paso
-                </button>
-              )}
-              {onDeleteStep && (
-                <button
-                  type="button"
-                  onClick={() => onDeleteStep(step.id)}
-                  className="text-xs font-semibold bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 hover:border-red-600 px-3 py-1.5 rounded-lg transition-all shadow-xs flex items-center gap-1.5 active:scale-95 cursor-pointer"
-                >
-                  <span>🗑</span> Eliminar Paso
-                </button>
-              )}
-            </div>
-          )}
+          <div className="flex items-center gap-2.5">
+            {/* ── Botón Marcar Paso como Finalizado (solo en modo ejecución) ── */}
+            {onToggleCompleted && (
+              <button
+                type="button"
+                onClick={onToggleCompleted}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer border ${
+                  isCompleted
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'
+                    : 'bg-white hover:bg-emerald-50 text-emerald-700 border-emerald-300 hover:border-emerald-500'
+                }`}
+                title={isCompleted ? 'Desmarcar paso como finalizado' : 'Marcar paso como finalizado'}
+              >
+                {isCompleted ? (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Finalizado
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Marcar Finalizado
+                  </>
+                )}
+              </button>
+            )}
+
+            {canEditDefinition && (
+              <div className="flex items-center gap-2.5">
+                {onCreateStep && (
+                  <button
+                    type="button"
+                    onClick={onCreateStep}
+                    className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-xs hover:shadow-sm transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
+                  >
+                    <span className="text-sm leading-none font-black">+</span> Crear Paso
+                  </button>
+                )}
+                {onDeleteStep && (
+                  <button
+                    type="button"
+                    onClick={() => onDeleteStep(step.id)}
+                    className="text-xs font-semibold bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 hover:border-red-600 px-3 py-1.5 rounded-lg transition-all shadow-xs flex items-center gap-1.5 active:scale-95 cursor-pointer"
+                  >
+                    <span>🗑</span> Eliminar Paso
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Step Title */}

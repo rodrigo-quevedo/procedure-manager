@@ -46,11 +46,17 @@ export const getExecutions = async (developerId?: number): Promise<ExecutionList
     const dev = users.find((u) => String(u.id) === String(exec.idDeveloper));
 
     const procSteps = steps.filter((s) => s.idProcedure === exec.idProcedure);
-    const execInputs = inputs.filter((i) => i.idExecution === exec.id);
 
-    // Calculate completed steps based on inputs filled
+    // Calculate completed steps from persisted localStorage marker (set by the execution view)
     const totalSteps = procSteps.length || 1;
-    const completedSteps = Math.min(execInputs.length > 0 ? Math.ceil(execInputs.length / 2) : 0, totalSteps);
+    const rawCompleted = localStorage.getItem(`pm_completed_steps_${exec.id}`);
+    let completedStepCount = 0;
+    if (rawCompleted) {
+      try {
+        completedStepCount = (JSON.parse(rawCompleted) as number[]).length;
+      } catch { completedStepCount = 0; }
+    }
+    const completedSteps = Math.min(completedStepCount, totalSteps);
 
     let lastProgress = 'Inicio de ejecución';
     if (exec.state === 'APPROVED_FINISHED') {
@@ -62,9 +68,9 @@ export const getExecutions = async (developerId?: number): Promise<ExecutionList
     } else if (exec.state === 'HAS_CORRECTIONS') {
       lastProgress = 'Líder solicitó correcciones en comprobante';
     } else if (exec.state === 'PAUSED') {
-      lastProgress = `Paso ${completedSteps || 1} de ${totalSteps} - Pausado`;
+      lastProgress = `${completedSteps} de ${totalSteps} pasos completados - Pausado`;
     } else {
-      lastProgress = `Paso ${completedSteps || 1} de ${totalSteps} - En curso`;
+      lastProgress = `${completedSteps} de ${totalSteps} pasos completados`;
     }
 
     const resolvedProjectName =
