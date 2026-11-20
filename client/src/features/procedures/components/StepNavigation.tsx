@@ -86,12 +86,13 @@ export const StepNavigation: React.FC<StepNavigationProps> = ({
                       : 'bg-red-700 text-white hover:bg-red-600 hover:scale-105 opacity-90 hover:opacity-100'
                 } ${draggedIndex === idx ? 'opacity-40 border-2 border-dashed border-red-300' : ''}`}
               >
-                {isDone ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  idx + 1
+                {idx + 1}
+                {isDone && (
+                  <span className="absolute -top-1 -right-1 bg-white text-emerald-600 rounded-full w-3.5 h-3.5 flex items-center justify-center shadow-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </span>
                 )}
               </button>
             );
