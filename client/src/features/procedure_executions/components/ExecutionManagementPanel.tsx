@@ -14,6 +14,8 @@ import {
   AlertCircle,
   Eye,
   Calendar,
+  Plus,
+  Search,
 } from 'lucide-react';
 
 interface ExecutionManagementPanelProps {
@@ -21,6 +23,8 @@ interface ExecutionManagementPanelProps {
   onRefresh: () => void;
   onResumeExecution: (executionId: number) => void;
   onSuccessFeedback?: (message: string) => void;
+  onCreateAndExecute?: () => void;
+  onSearchProcedures?: () => void;
 }
 
 export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> = ({
@@ -28,6 +32,8 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
   onRefresh,
   onResumeExecution,
   onSuccessFeedback,
+  onCreateAndExecute,
+  onSearchProcedures,
 }) => {
   // Tabs sin 'ACTIVE'
   const [activeTab, setActiveTab] = useState<Exclude<ExecutionState, 'ACTIVE'> | 'ALL'>('ALL');
@@ -259,6 +265,26 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
 
   return (
     <div className="space-y-6">
+      {/* Botones de acción superior: Crear y Ejecutar / Buscar Procedimientos */}
+      <div className="flex flex-wrap items-center justify-end gap-3 pb-2">
+        <button
+          type="button"
+          onClick={onSearchProcedures}
+          className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg shadow-xs hover:bg-gray-50 hover:text-gray-900 transition-all cursor-pointer"
+        >
+          <Search className="w-4 h-4 text-gray-500" />
+          <span>Buscar Procedimientos</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={onCreateAndExecute}
+          className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-xs transition-all active:scale-95 cursor-pointer"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Crear y Ejecutar</span>
+        </button>
+      </div>
 
       {/* Seccion 1 */}
       <div className="rounded-lg bg-rose-50 border border-rose-200/80 p-5 shadow-sm transition-all duration-300 hover:shadow-md space-y-4 -mx-6 px-6">
