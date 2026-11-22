@@ -180,7 +180,7 @@ export const MemberDashboard = ({
               PM
             </div>
             <span className="font-semibold text-gray-900 text-sm tracking-tight">
-              {organization?.name || 'Procedure Manager'}
+              Procedure Manager
             </span>
           </div>
 
@@ -198,26 +198,15 @@ export const MemberDashboard = ({
               </button>
             )}
 
-            {/* <button
-              type="button"
-              onClick={() => setActiveTab('PROCEDURES')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${activeTab === 'PROCEDURES'
-                  ? 'bg-red-50 text-red-700'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-            >
-              Procedimientos
-            </button> */}
-
             <button
               type="button"
               onClick={() => setActiveTab('EXECUTIONS')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${activeTab === 'EXECUTIONS'
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${activeTab === 'EXECUTIONS' || activeTab === 'PROCEDURES'
                 ? 'bg-red-50 text-red-700'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 }`}
             >
-              Mis Ejecuciones
+              Procedimientos y Ejecuciones
             </button>
 
             <button
@@ -234,11 +223,18 @@ export const MemberDashboard = ({
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-xs font-medium text-gray-900">{user.email}</p>
-            <span className="inline-block text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-red-100 text-red-700">
-              {roleLabel}
-            </span>
+          <div className="text-right flex flex-col items-end">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-gray-900">{user.email}</span>
+              <span className="inline-block text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-red-100 text-red-700">
+                {roleLabel}
+              </span>
+            </div>
+            {organization?.name && (
+              <span className="text-[11px] font-medium text-gray-500 tracking-tight">
+                {organization.name}
+              </span>
+            )}
           </div>
 
           <button
@@ -267,6 +263,8 @@ export const MemberDashboard = ({
             procedures={procedures}
             onExecuteProcedure={handleExecuteProcedure}
             onNewProcedure={handleStartCreationAndExecution}
+            activeSection="PROCEDURES"
+            onSelectSection={(sec) => setActiveTab(sec)}
           />
         )}
 
@@ -277,6 +275,10 @@ export const MemberDashboard = ({
             onRefresh={loadAllData}
             onResumeExecution={handleResumeExecution}
             onSuccessFeedback={showSuccessFeedback}
+            onCreateAndExecute={handleStartCreationAndExecution}
+            onSearchProcedures={() => setActiveTab('PROCEDURES')}
+            activeSection="EXECUTIONS"
+            onSelectSection={(sec) => setActiveTab(sec)}
           />
         )}
 

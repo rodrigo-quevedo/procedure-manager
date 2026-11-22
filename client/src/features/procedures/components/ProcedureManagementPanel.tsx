@@ -6,17 +6,22 @@ import { getProcedureDetails } from '../api/proceduresApi';
 import { getExecutionDetails } from '@/features/procedure_executions/api/executionsApi';
 import type { ExecutionWithDetails } from '@/features/procedure_executions/types';
 import { storage } from '@/services/storage';
+import { ProceduresSidebarNav, ProceduresNavSection } from '@/components/ProceduresSidebarNav';
 
 interface ProcedureManagementPanelProps {
   procedures: Procedure[];
   onExecuteProcedure: (procedureId: number) => void;
   onNewProcedure: () => void;
+  activeSection?: ProceduresNavSection;
+  onSelectSection?: (section: ProceduresNavSection) => void;
 }
 
 export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> = ({
   procedures,
   onExecuteProcedure,
   onNewProcedure,
+  activeSection = 'PROCEDURES',
+  onSelectSection,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [tagSearchInput, setTagSearchInput] = useState('');
@@ -137,25 +142,38 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
   }, [procedures, searchTerm, detailScope, allSteps, selectedTags]);
 
   return (
-    <div className="space-y-6">
-      {/* Header and Quick Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900 tracking-tight">
-            Gestión de Procedimientos
-          </h2>
-          <p className="text-xs text-gray-500 mt-1">
-            Explora, busca y ejecuta procedimientos estándar aprobados para tu organización.
-          </p>
+    <div className="flex flex-col md:flex-row gap-6 items-start">
+      {/* Sidebar Nav Reusable */}
+      <ProceduresSidebarNav
+        activeSection={activeSection}
+        onSelectSection={(section) => {
+          if (onSelectSection) {
+            onSelectSection(section);
+          }
+        }}
+        onCreateProcedure={onNewProcedure}
+      />
+
+      {/* Contenido Principal de Gestión de Procedimientos */}
+      <div className="flex-1 min-w-0 space-y-6 w-full">
+        {/* Header and Quick Actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+              Gestión de Procedimientos
+            </h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Explora, busca y ejecuta procedimientos estándar aprobados para tu organización.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onNewProcedure}
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 cursor-pointer"
+          >
+            <span className="text-sm font-bold leading-none">+</span> Crear y Ejecutar Procedimiento
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={onNewProcedure}
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 cursor-pointer"
-        >
-          <span className="text-sm font-bold leading-none">+</span> Crear y Ejecutar Procedimiento
-        </button>
-      </div>
 
       {/* SEARCH BAR & DETAIL SCOPE CHECKBOXES (HU-008 CA 1) */}
       <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs space-y-3">
@@ -361,18 +379,19 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
         </div>
       )}
 
-      {/* Procedure Detail Modal (HU-008 CA 3, 4, 5) */}
-      {selectedProcedureDetails && (
-        <ProcedureDetailModal
-          procedure={selectedProcedureDetails}
-          exampleExecutions={exampleExecutions}
-          onClose={() => setSelectedProcedureDetails(null)}
-          onExecute={(procId) => {
-            setSelectedProcedureDetails(null);
-            onExecuteProcedure(procId);
-          }}
-        />
-      )}
+        {/* Procedure Detail Modal (HU-008 CA 3, 4, 5) */}
+        {selectedProcedureDetails && (
+          <ProcedureDetailModal
+            procedure={selectedProcedureDetails}
+            exampleExecutions={exampleExecutions}
+            onClose={() => setSelectedProcedureDetails(null)}
+            onExecute={(procId) => {
+              setSelectedProcedureDetails(null);
+              onExecuteProcedure(procId);
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 };

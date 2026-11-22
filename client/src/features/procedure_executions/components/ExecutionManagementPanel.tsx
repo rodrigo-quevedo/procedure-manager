@@ -5,6 +5,7 @@ import type { ExecutionWithDetails } from '../types';
 import { ExecutionDetailModal } from './ExecutionDetailModal';
 import { getExecutionDetails, updateExecutionState } from '../api/executionsApi';
 import { ExecutionTable, ColumnDef } from './ExecutionTable';
+import { ProceduresSidebarNav, ProceduresNavSection } from '@/components/ProceduresSidebarNav';
 import {
   Play,
   Pause,
@@ -25,6 +26,8 @@ interface ExecutionManagementPanelProps {
   onSuccessFeedback?: (message: string) => void;
   onCreateAndExecute?: () => void;
   onSearchProcedures?: () => void;
+  activeSection?: ProceduresNavSection;
+  onSelectSection?: (section: ProceduresNavSection) => void;
 }
 
 export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> = ({
@@ -34,6 +37,8 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
   onSuccessFeedback,
   onCreateAndExecute,
   onSearchProcedures,
+  activeSection = 'EXECUTIONS',
+  onSelectSection,
 }) => {
   // Tabs sin 'ACTIVE'
   const [activeTab, setActiveTab] = useState<Exclude<ExecutionState, 'ACTIVE'> | 'ALL'>('ALL');
@@ -264,30 +269,22 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Botones de acción superior: Crear y Ejecutar / Buscar Procedimientos */}
-      <div className="flex flex-wrap items-center justify-end gap-3 pb-2">
-        <button
-          type="button"
-          onClick={onSearchProcedures}
-          className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg shadow-xs hover:bg-gray-50 hover:text-gray-900 transition-all cursor-pointer"
-        >
-          <Search className="w-4 h-4 text-gray-500" />
-          <span>Buscar Procedimientos</span>
-        </button>
+    <div className="flex flex-col md:flex-row gap-6 items-start">
+      {/* Sidebar Nav Reusable */}
+      <ProceduresSidebarNav
+        activeSection={activeSection}
+        onSelectSection={(section) => {
+          if (onSelectSection) {
+            onSelectSection(section);
+          }
+        }}
+        onCreateProcedure={onCreateAndExecute}
+      />
 
-        <button
-          type="button"
-          onClick={onCreateAndExecute}
-          className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-xs transition-all active:scale-95 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Crear y Ejecutar</span>
-        </button>
-      </div>
-
-      {/* Seccion 1 */}
-      <div className="rounded-lg bg-rose-50 border border-rose-200/80 p-5 shadow-sm transition-all duration-300 hover:shadow-md space-y-4 -mx-6 px-6">
+      {/* Contenido Principal de Ejecuciones */}
+      <div className="flex-1 min-w-0 space-y-6 w-full">
+        {/* Seccion 1 */}
+        <div className="rounded-lg bg-rose-50 border border-rose-200/80 p-5 shadow-sm transition-all duration-300 hover:shadow-md space-y-4">
         <div>
           <div className="flex items-center justify-between group relative">
             <div className="flex items-center gap-3">
@@ -321,7 +318,7 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
       </div>
 
       {/* SECCIÓN 2: EN PAUSA */}
-      <div className="rounded-lg bg-gray-50/80 border border-gray-200 p-5 shadow-2xs transition-all duration-300 hover:shadow-sm space-y-4 -mx-6 px-6">
+      <div className="rounded-lg bg-gray-50/80 border border-gray-200 p-5 shadow-2xs transition-all duration-300 hover:shadow-sm space-y-4">
         <div>
           <div className="flex items-center justify-between group relative">
             <div className="flex items-center gap-3">
@@ -456,20 +453,17 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
         </div>
       </div>
 
-      {/* Modal de Detalle de Ejecución */}
-      {
-        selectedExecutionDetails && (
+        {/* Modal de Detalle de Ejecución */}
+        {selectedExecutionDetails && (
           <ExecutionDetailModal
             execution={selectedExecutionDetails}
             onClose={() => setSelectedExecutionDetails(null)}
             onResume={handleResume}
           />
-        )
-      }
+        )}
 
-      {/* Modal para Confirmar Cancelación de Ejecución */}
-      {
-        cancelCandidate && (
+        {/* Modal para Confirmar Cancelación de Ejecución */}
+        {cancelCandidate && (
           <div className="fixed inset-0 z-60 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
             <div className="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
               <div className="flex items-center gap-3">
@@ -506,8 +500,8 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
               </div>
             </div>
           </div>
-        )
-      }
-    </div >
+        )}
+      </div>
+    </div>
   );
 };
