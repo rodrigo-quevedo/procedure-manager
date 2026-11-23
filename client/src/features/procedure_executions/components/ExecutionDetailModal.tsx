@@ -16,6 +16,7 @@ import {
   PlaySquare,
   FolderKanban,
   User,
+  Tags,
 } from 'lucide-react';
 
 interface ExecutionDetailModalProps {
@@ -223,9 +224,6 @@ export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({
               <div className="w-full md:w-64 shrink-0 space-y-5">
                 {/* Navegación de Pasos */}
                 <div>
-                  <label className="block text-xs font-bold text-red-600 uppercase tracking-wider mb-2">
-                    Pasos del Procedimiento
-                  </label>
                   <StepNavigation
                     steps={steps}
                     selectedStepId={selectedStepId}
@@ -261,7 +259,29 @@ export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({
                   </div>
                 </div>
 
-                {/* 3. Nombre del Procedimiento */}
+                {/* 3. Categorías / Tags */}
+                <div>
+                  <label className="block text-xs font-bold text-red-600 uppercase tracking-wider mb-1">
+                    Categorías
+                  </label>
+                  <div className="flex flex-wrap gap-1 bg-white p-2 rounded-lg border border-gray-200/80">
+                    {procedure?.tags && procedure.tags.length > 0 ? (
+                      procedure.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-100"
+                        >
+                          <Tags className="w-2.5 h-2.5 text-red-500" />
+                          {tag}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-gray-400 italic">General</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* 4. Nombre del Procedimiento */}
                 <div>
                   <label className="block text-xs font-bold text-red-600 uppercase tracking-wider mb-1">
                     Nombre
@@ -271,7 +291,7 @@ export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({
                   </p>
                 </div>
 
-                {/* 4. Descripción del Procedimiento */}
+                {/* 5. Descripción del Procedimiento */}
                 <div>
                   <label className="block text-xs font-bold text-red-600 uppercase tracking-wider mb-1">
                     Descripción

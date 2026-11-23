@@ -16,6 +16,7 @@ import { StepDetailView } from './StepDetailView';
 import { saveProcedureHierarchy, updateProcedureState } from '../api/proceduresApi';
 import { createExecution, saveExecutionInput, updateExecutionState } from '@/features/procedure_executions/api/executionsApi';
 import { storage } from '@/services/storage';
+import { Tags } from 'lucide-react';
 
 interface CreationAndExecutionViewProps {
   currentUser: User;
@@ -464,6 +465,28 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Categorías / Tags */}
+          <div className="mb-4">
+            <label className="block text-xs font-bold text-red-600 uppercase tracking-wider mb-1">
+              Categorías
+            </label>
+            <div className="flex flex-wrap gap-1 bg-white p-2 rounded-lg border border-gray-200">
+              {initialProcedure?.tags && initialProcedure.tags.length > 0 ? (
+                initialProcedure.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-100"
+                  >
+                    <Tags className="w-2.5 h-2.5 text-red-500" />
+                    {tag}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs text-gray-400 italic">General</span>
+              )}
+            </div>
           </div>
 
           {/* Procedure Name */}

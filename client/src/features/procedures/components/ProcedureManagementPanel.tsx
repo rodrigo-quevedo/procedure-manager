@@ -1,10 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import type { Procedure } from '@shared/types';
+import type { Procedure, Execution } from '@shared/types';
 import type { ProcedureWithDetails } from '../types';
 import { ProcedureDetailModal } from './ProcedureDetailModal';
 import { getProcedureDetails } from '../api/proceduresApi';
-import { getExecutionDetails } from '@/features/procedure_executions/api/executionsApi';
-import type { ExecutionWithDetails } from '@/features/procedure_executions/types';
 import { storage } from '@/services/storage';
 
 interface ProcedureManagementPanelProps {
@@ -19,16 +17,21 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
   onNewProcedure,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [tagSearchInput, setTagSearchInput] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [availableTags, setAvailableTags] = useState<string[]>([
-    'DevOps',
-    'Backend',
-    'Seguridad',
-    'Cloud',
-    'Frontend',
-    'Testing',
-  ]);
+
+  // Calcular tags disponibles en base a todos los tags de los procedimientos obtenidos (sin repetición)
+  const availableTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    procedures.forEach((proc) => {
+      if (proc.tags && Array.isArray(proc.tags)) {
+        proc.tags.forEach((tag) => {
+          const trimmed = tag.trim();
+          if (trimmed) tagSet.add(trimmed);
+        });
+      }
+    });
+    return Array.from(tagSet).sort((a, b) => a.localeCompare(b));
+  }, [procedures]);
 
   // Nivel de Detalle checkboxes (HU-008 CA 1)
   const [detailScope, setDetailScope] = useState({
@@ -39,7 +42,7 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
 
   // Modal Detail state (HU-008 CA 3, 4, 5)
   const [selectedProcedureDetails, setSelectedProcedureDetails] = useState<ProcedureWithDetails | null>(null);
-  const [exampleExecutions, setExampleExecutions] = useState<ExecutionWithDetails[]>([]);
+  const [procedureExecutions, setProcedureExecutions] = useState<Execution[]>([]);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
   const toggleScope = (key: keyof typeof detailScope) => {
@@ -59,21 +62,6 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
     setSelectedTags([]);
   };
 
-  const handleAddTag = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = tagSearchInput.trim();
-    if (!trimmed) return;
-
-    const formattedTag = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
-    if (!availableTags.includes(formattedTag)) {
-      setAvailableTags((prev) => [...prev, formattedTag]);
-    }
-    if (!selectedTags.includes(formattedTag)) {
-      setSelectedTags((prev) => [...prev, formattedTag]);
-    }
-    setTagSearchInput('');
-  };
-
   // Open Procedure Detail (HU-008 CA 3, 4, 5)
   const handleOpenDetail = async (procedureId: number) => {
     setIsLoadingDetails(true);
@@ -81,14 +69,8 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
       const details = await getProcedureDetails(procedureId);
       if (details) {
         setSelectedProcedureDetails(details);
-        // Find example executions (e.g. APPROVED_FINISHED executions of this procedure)
         const allExecutions = storage.getExecutions().filter((e) => e.idProcedure === procedureId);
-        const hydratedExamples: ExecutionWithDetails[] = [];
-        for (const ex of allExecutions) {
-          const det = await getExecutionDetails(ex.id);
-          if (det) hydratedExamples.push(det);
-        }
-        setExampleExecutions(hydratedExamples);
+        setProcedureExecutions(allExecutions);
       }
     } finally {
       setIsLoadingDetails(false);
@@ -140,22 +122,22 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
     <div className="w-full max-w-5xl space-y-6">
       {/* Header and Quick Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 tracking-tight">
-                Gestión de Procedimientos
-              </h2>
-              <p className="text-xs text-gray-500 mt-1">
-                Explora, busca y ejecuta procedimientos estándar aprobados para tu organización.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onNewProcedure}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 cursor-pointer"
-            >
-              <span className="text-sm font-bold leading-none">+</span> Crear y Ejecutar Procedimiento
-            </button>
-          </div>
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+            Gestión de Procedimientos
+          </h2>
+          <p className="text-xs text-gray-500 mt-1">
+            Explora, busca y ejecuta procedimientos estándar aprobados para tu organización.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onNewProcedure}
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 cursor-pointer"
+        >
+          <span className="text-sm font-bold leading-none">+</span> Crear y Ejecutar Procedimiento
+        </button>
+      </div>
 
       {/* SEARCH BAR & DETAIL SCOPE CHECKBOXES (HU-008 CA 1) */}
       <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs space-y-3">
@@ -228,11 +210,10 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
             <button
               type="button"
               onClick={handleClearTags}
-              className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all cursor-pointer ${
-                selectedTags.length === 0
-                  ? 'bg-red-600 text-white shadow-xs'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all cursor-pointer ${selectedTags.length === 0
+                ? 'bg-red-600 text-white shadow-xs'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
             >
               Todas
             </button>
@@ -243,11 +224,10 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
                   key={tag}
                   type="button"
                   onClick={() => handleToggleTag(tag)}
-                  className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all flex items-center gap-1 border cursor-pointer ${
-                    isSelected
-                      ? 'bg-red-600 text-white border-red-600 shadow-xs'
-                      : 'bg-red-50/70 text-red-700 border-red-200 hover:bg-red-100'
-                  }`}
+                  className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all flex items-center gap-1 border cursor-pointer ${isSelected
+                    ? 'bg-red-600 text-white border-red-600 shadow-xs'
+                    : 'bg-red-50/70 text-red-700 border-red-200 hover:bg-red-100'
+                    }`}
                 >
                   <span>{tag}</span>
                   {isSelected && <span className="text-[9px]">✓</span>}
@@ -256,7 +236,7 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
             })}
           </div>
 
-          <form onSubmit={handleAddTag} className="flex items-center gap-1">
+          {/* <form onSubmit={handleAddTag} className="flex items-center gap-1">
             <input
               type="text"
               value={tagSearchInput}
@@ -273,7 +253,7 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
                 Limpiar
               </button>
             )}
-          </form>
+          </form> */}
         </div>
       </div>
 
@@ -281,7 +261,7 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredProcedures.map((proc) => {
           const procSteps = allSteps.filter((s) => s.idProcedure === proc.id);
-          const firstTag = proc.tags?.[0] || 'General';
+          const tags = proc.tags && proc.tags.length > 0 ? proc.tags : ['General'];
 
           return (
             <div
@@ -291,9 +271,16 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
             >
               <div className="p-4 bg-gradient-to-b from-gray-50/80 to-transparent border-b border-gray-100">
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-100">
-                    {firstTag}
-                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-100"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                   <button
                     type="button"
                     title="Ejecutar procedimiento"
@@ -361,18 +348,18 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
         </div>
       )}
 
-        {/* Procedure Detail Modal (HU-008 CA 3, 4, 5) */}
-        {selectedProcedureDetails && (
-          <ProcedureDetailModal
-            procedure={selectedProcedureDetails}
-            exampleExecutions={exampleExecutions}
-            onClose={() => setSelectedProcedureDetails(null)}
-            onExecute={(procId) => {
-              setSelectedProcedureDetails(null);
-              onExecuteProcedure(procId);
-            }}
-          />
-        )}
+      {/* Procedure Detail Modal (HU-008 CA 3, 4, 5) */}
+      {selectedProcedureDetails && (
+        <ProcedureDetailModal
+          procedure={selectedProcedureDetails}
+          executions={procedureExecutions}
+          onClose={() => setSelectedProcedureDetails(null)}
+          onExecute={(procId) => {
+            setSelectedProcedureDetails(null);
+            onExecuteProcedure(procId);
+          }}
+        />
+      )}
     </div>
   );
 };
