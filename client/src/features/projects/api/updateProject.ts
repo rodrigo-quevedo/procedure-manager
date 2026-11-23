@@ -1,48 +1,39 @@
-import type { User } from '@/features/auth/types';
-import { storage } from '@/services/storage';
-import type { ClientProject, ProjectAssignmentInput } from '../types';
-import { normalizeProjectAssignment } from '../utils/validateProject';
+import type { UpdateProjectDTO, ProjectDetailResponse } from '@pm/shared';
+import type { ProjectAssignmentInput } from '../types';
+
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
+
+const getToken = (): string => {
+  const raw = localStorage.getItem('pm_auth_session');
+  if (!raw) throw new Error('Sesión no encontrada. Por favor, inicia sesión nuevamente.');
+  const session = JSON.parse(raw) as { token: string };
+  return session.token;
+};
 
 export const updateProject = async (
-  projectId: string,
-  actor: User,
+  projectId: number,
   input: ProjectAssignmentInput,
-): Promise<ClientProject> => {
-  await new Promise((resolve) => setTimeout(resolve, 400));
-
-  const existing = storage.getProjects().find((project) => project.id === projectId);
-  if (!existing || existing.organizationId !== actor.organizationId) {
-    throw new Error('Proyecto no encontrado.');
-  }
-
-  const canEdit =
-    actor.role === 'ORGANIZACION' ||
-    (actor.role === 'LIDER' &&
-      (existing.leaderIds.includes(actor.id) || existing.memberIds.includes(actor.id)));
-
-  if (!canEdit) {
-    throw new Error('No tienes permiso para editar este proyecto.');
-  }
-
-  const organizationMembers = storage
-    .getUsersByOrganization(actor.organizationId)
-    .filter((member) => member.role !== 'ORGANIZACION');
-
-  const assignment = normalizeProjectAssignment(input, {
-    actor,
-    organizationMembers,
-    previouslyAssignedIds: [...existing.leaderIds, ...existing.memberIds],
-  });
-
-  const updated: ClientProject = {
-    ...existing,
-    name: assignment.name,
-    confidentiality: assignment.confidentiality,
-    leaderIds: assignment.leaderIds,
-    memberIds: assignment.memberIds,
-    updatedAt: new Date().toISOString(),
+): Promise<ProjectDetailResponse> => {
+  const payload: UpdateProjectDTO = {
+    name: input.name.trim(),
+    confidentialityLevel: input.confidentiality || undefined,
+    leaderIds: input.leaderIds,
+    memberIds: input.memberIds,
   };
 
-  storage.saveProject(updated);
-  return updated;
+  const res = await fetch(`${API_BASE}/api/projects/${projectId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { message?: string };
+    throw new Error(body.message ?? 'Error al actualizar el proyecto.');
+  }
+
+  return res.json();
 };

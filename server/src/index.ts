@@ -6,6 +6,7 @@ import { runMigrations } from './database/migrate';
 import { ROLE_LABELS, type RoleCode } from '@pm/shared';
 import authRouter from './features/auth/auth.router';
 import membersRouter from './features/members/members.router';
+import projectsRouter from './features/projects/projects.router';
 
 dotenv.config();
 
@@ -17,8 +18,9 @@ app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173' }));
 app.use(express.json());
 
 // Rutas
-app.use('/api/auth',    authRouter);
-app.use('/api/members', membersRouter);
+app.use('/api/auth',     authRouter);
+app.use('/api/members',  membersRouter);
+app.use('/api/projects', projectsRouter);
 
 // Endpoint de verificación (Health Check + prueba de @pm/shared)
 app.get('/api/health', async (_req: Request, res: Response) => {

@@ -1,24 +1,33 @@
-import type { User } from '@/features/auth/types';
-import type { ConfidentialityLevel, ProjectAssignmentInput } from '../types';
+import type { MemberResponse, RoleCode, ConfidentialityLevel } from '@pm/shared';
+import type { ProjectAssignmentInput } from '../types';
 
 const CONFIDENTIALITY_LEVELS: ConfidentialityLevel[] = ['PUBLIC', 'PRIVATE'];
 
 export interface NormalizedProjectAssignment {
   name: string;
   confidentiality: ConfidentialityLevel;
-  leaderIds: string[];
-  memberIds: string[];
+  leaderIds: number[];
+  memberIds: number[];
+}
+
+interface ActorLike {
+  id: number;
+  role: RoleCode | string;
+  isActive: boolean;
+  name?: string;
+  fullName?: string;
+  organizationId?: string | number;
 }
 
 interface NormalizeOptions {
-  actor: User;
-  organizationMembers: User[];
+  actor: ActorLike;
+  organizationMembers: MemberResponse[];
   ensureActorAsLeader?: boolean;
-  previouslyAssignedIds?: string[];
+  previouslyAssignedIds?: number[];
 }
 
-function uniqueIds(ids: string[]): string[] {
-  return [...new Set(ids.filter((id) => id.trim() !== ''))];
+function uniqueIds(ids: number[]): number[] {
+  return [...new Set(ids)];
 }
 
 export function normalizeProjectAssignment(
@@ -27,7 +36,10 @@ export function normalizeProjectAssignment(
 ): NormalizedProjectAssignment {
   const { actor, organizationMembers } = options;
 
-  if (actor.role !== 'ORGANIZACION' && actor.role !== 'LIDER') {
+  const isOrg = actor.role === 'ORGANIZATION' || actor.role === 'ORGANIZACION';
+  const isLeader = actor.role === 'LEADER' || actor.role === 'LIDER';
+
+  if (!isOrg && !isLeader) {
     throw new Error('No tienes permiso para gestionar proyectos.');
   }
 
@@ -56,17 +68,17 @@ export function normalizeProjectAssignment(
   let leaderIds = uniqueIds(input.leaderIds);
   let memberIds = uniqueIds(input.memberIds);
 
-  if (options.ensureActorAsLeader && actor.role === 'LIDER' && !leaderIds.includes(actor.id)) {
+  if (options.ensureActorAsLeader && isLeader && !leaderIds.includes(actor.id)) {
     leaderIds = [actor.id, ...leaderIds];
   }
 
   memberIds = memberIds.filter((id) => !leaderIds.includes(id));
 
-  if (actor.role === 'ORGANIZACION' && leaderIds.length === 0) {
+  if (isOrg && leaderIds.length === 0) {
     throw new Error('Debes seleccionar al menos un Líder.');
   }
 
-  if (actor.role === 'LIDER') {
+  if (isLeader) {
     const staysAssigned = leaderIds.includes(actor.id) || memberIds.includes(actor.id);
     if (!staysAssigned) {
       throw new Error('Debes permanecer asignado al proyecto.');
@@ -76,15 +88,16 @@ export function normalizeProjectAssignment(
   const membersById = new Map(organizationMembers.map((member) => [member.id, member]));
   const previouslyAssigned = new Set(options.previouslyAssignedIds ?? []);
 
-  const assertAssignable = (id: string, asLeader: boolean) => {
+  const assertAssignable = (id: number, asLeader: boolean) => {
     const member = membersById.get(id);
-    if (!member || member.organizationId !== actor.organizationId || member.role === 'ORGANIZACION') {
+    if (!member) {
       throw new Error('Uno de los miembros seleccionados no pertenece a la organización.');
     }
     if (!member.isActive && !previouslyAssigned.has(id)) {
-      throw new Error(`No puedes asignar a ${member.name} porque su cuenta está inhabilitada.`);
+      throw new Error(`No puedes asignar a ${member.fullName} porque su cuenta está inhabilitada.`);
     }
-    if (asLeader && member.role !== 'LIDER') {
+    const memberIsLeader = member.role === 'LEADER' || (member.role as string) === 'LIDER';
+    if (asLeader && !memberIsLeader) {
       throw new Error('Solo los miembros con rol Líder pueden ser asignados como líderes del proyecto.');
     }
   };

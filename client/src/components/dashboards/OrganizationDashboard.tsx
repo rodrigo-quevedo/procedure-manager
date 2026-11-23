@@ -201,9 +201,9 @@ export const OrganizationDashboard = ({
           {/* Contenido centrado */}
           <div className="flex-1 w-full min-w-0 flex justify-center">
             <div className="w-full max-w-5xl space-y-6">
-              {activeTab === 'PROJECTS' && organization && (
+              {activeTab === 'PROJECTS' && (
                 <ProjectsPanel
-                  organizationId={organization.id}
+                  organizationId={organization?.id || user.id}
                   actor={user}
                   onSuccess={showSuccessFeedback}
                   createTrigger={projectCreateTrigger}
