@@ -11,10 +11,14 @@ const getToken = (): string => {
 
 export const getProjects = async (
   organizationId?: string | number,
+  options?: { assignedOnly?: boolean },
 ): Promise<ProjectDetailResponse[]> => {
   const url = new URL(`${API_BASE}/api/projects`);
   if (organizationId) {
     url.searchParams.set('organizationId', String(organizationId));
+  }
+  if (options?.assignedOnly) {
+    url.searchParams.set('assigned', 'true');
   }
 
   const res = await fetch(url.toString(), {

@@ -18,9 +18,9 @@ export const NavbarHeader: React.FC<NavbarHeaderProps> = ({
   children,
 }) => {
   const roleLabel =
-    user.role === 'LIDER'
+    user.role === 'LEADER'
       ? 'Líder'
-      : user.role === 'ORGANIZACION'
+      : user.role === 'ORGANIZATION'
         ? 'Organización'
         : 'Desarrollador';
 

@@ -34,11 +34,81 @@ const rowToProject = (row: ProjectRow): Project & { updatedAt: string } => ({
 });
 
 export class ProjectsDAO {
-    async findByOrganization(organizationId: number): Promise<ProjectDetailResponse[]> {
+    async findByOrganizationOrMember(userId: number, role: RoleCode, organizationId?: number): Promise<ProjectDetailResponse[]> {
+        const db = await getDb();
+        let rows: ProjectRow[] = [];
+
+        if (role === 'ORGANIZATION') {
+            const orgId = organizationId || userId;
+            rows = await db.all<ProjectRow[]>(
+                `SELECT * FROM PROYECTOS WHERE id_organization = ? ORDER BY created_at DESC`,
+                orgId,
+            );
+        } else {
+            // Find projects where user is assigned in MIEMBROS_PROYECTO or is public in their org
+            rows = await db.all<ProjectRow[]>(
+                `SELECT DISTINCT p.* 
+                   FROM PROYECTOS p
+                   LEFT JOIN MIEMBROS_PROYECTO mp ON mp.id_project = p.id
+                  WHERE mp.id_member = ?
+                     OR (p.confidentiality_level = 'PUBLIC' AND p.id_organization = (
+                         SELECT id_organization FROM ORGANIZACION_MIEMBROS WHERE id_member = ? LIMIT 1
+                     ))
+                  ORDER BY p.created_at DESC`,
+                userId,
+                userId,
+            );
+        }
+
+        if (rows.length === 0) return [];
+
+        const projectIds = rows.map((r) => r.id);
+        const placeholders = projectIds.map(() => '?').join(',');
+
+        const membersRows = await db.all<ProjectMemberRow[]>(
+            `SELECT mp.id_project, mp.id_member, mp.assigned_at, r.code as role_code
+               FROM MIEMBROS_PROYECTO mp
+               JOIN USUARIOS u ON u.id = mp.id_member
+               JOIN ROLES r ON r.id_role = u.id_role
+              WHERE mp.id_project IN (${placeholders})`,
+            ...projectIds,
+        );
+
+        const projectMap = new Map<number, { leaderIds: number[]; memberIds: number[] }>();
+        for (const p of rows) {
+            projectMap.set(p.id, { leaderIds: [], memberIds: [] });
+        }
+
+        for (const m of membersRows) {
+            const entry = projectMap.get(m.id_project);
+            if (entry) {
+                if (m.role_code === 'LEADER') {
+                    entry.leaderIds.push(m.id_member);
+                } else {
+                    entry.memberIds.push(m.id_member);
+                }
+            }
+        }
+
+        return rows.map((r) => {
+            const assignees = projectMap.get(r.id) ?? { leaderIds: [], memberIds: [] };
+            return {
+                ...rowToProject(r),
+                leaderIds: assignees.leaderIds,
+                memberIds: assignees.memberIds,
+            };
+        });
+    }
+
+    async findByMember(userId: number): Promise<ProjectDetailResponse[]> {
         const db = await getDb();
         const rows = await db.all<ProjectRow[]>(
-            `SELECT * FROM PROYECTOS WHERE id_organization = ? ORDER BY created_at DESC`,
-            organizationId,
+            `SELECT DISTINCT p.* 
+               FROM PROYECTOS p
+               JOIN MIEMBROS_PROYECTO mp ON mp.id_project = p.id
+              WHERE mp.id_member = ?
+              ORDER BY p.created_at DESC`,
+            userId,
         );
 
         if (rows.length === 0) return [];
@@ -79,6 +149,10 @@ export class ProjectsDAO {
                 memberIds: assignees.memberIds,
             };
         });
+    }
+
+    async findByOrganization(organizationId: number): Promise<ProjectDetailResponse[]> {
+        return this.findByOrganizationOrMember(organizationId, 'ORGANIZATION', organizationId);
     }
 
     async findById(projectId: number): Promise<ProjectDetailResponse | null> {
@@ -127,7 +201,6 @@ export class ProjectsDAO {
 
         await db.run('BEGIN TRANSACTION');
         try {
-            console.log("DAO activado. Ejecutando transaccion de insercion en la tabla PROYECTOS.")
             const result = await db.run(
                 `INSERT INTO PROYECTOS (id_organization, id_creator, confidentiality_level, name, created_at, updated_at)
                  VALUES (?, ?, ?, ?, ?, ?)`,

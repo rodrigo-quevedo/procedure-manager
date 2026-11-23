@@ -2,6 +2,9 @@ import { getDb } from '../config/database';
 import { up as migration001 } from './migrations/001_create_auth_tables';
 import { up as migration002 } from './migrations/002_create_members_table';
 import { up as migration003 } from './migrations/003_create_projects_table';
+import { up as migration004 } from './migrations/004_create_procedures_table';
+import { up as migration005 } from './migrations/005_create_executions_table';
+import { up as migration006 } from './migrations/006_add_step_completion';
 
 /**
  * Runs all pending migrations in order.
@@ -13,6 +16,9 @@ export const runMigrations = async (): Promise<void> => {
     await migration001(db);
     await migration002(db);
     await migration003(db);
+    await migration004(db);
+    await migration005(db);
+    await migration006(db);
 
     console.log('✅ Database migrations applied.');
 };

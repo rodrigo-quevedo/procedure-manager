@@ -76,7 +76,7 @@ export const storage = {
 
   getUsersByOrganization(organizationId: string): User[] {
     const users = storage.getUsers();
-    return users.filter((u) => u.organizationId === organizationId);
+    return users.filter((u) => (u as any).organizationId === organizationId || (u as any).idOrganization === organizationId);
   },
 
   findUserByEmail(email: string): User | null {
@@ -131,7 +131,7 @@ export const storage = {
   },
 
   getProjectsByOrganization(organizationId: string): ClientProject[] {
-    return storage.getProjects().filter((project) => project.organizationId === organizationId);
+    return storage.getProjects().filter((project) => (project as any).organizationId === organizationId || (project as any).idOrganization === organizationId);
   },
 
   // Procedures

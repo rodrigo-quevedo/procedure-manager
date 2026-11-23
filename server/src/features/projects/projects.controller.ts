@@ -27,7 +27,8 @@ export class ProjectsController {
         try {
             const { userId, role } = getAuthContext(res);
             const organizationId = role === 'ORGANIZATION' ? userId : Number(req.query.organizationId || userId);
-            const projects = await projectsService.getProjects(organizationId, userId, role);
+            const onlyAssigned = req.query.assigned === 'true' || req.query.onlyAssigned === 'true';
+            const projects = await projectsService.getProjects(organizationId, userId, role, onlyAssigned);
             res.status(200).json(projects);
         } catch (err) {
             serverError(res, err);

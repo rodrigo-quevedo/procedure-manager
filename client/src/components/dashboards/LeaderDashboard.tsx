@@ -1,6 +1,4 @@
 import { useEffect, useState, useCallback } from 'react';
-import { storage } from '@/services/storage';
-import { initializeProcedureMocks } from '@/services/mockSeed';
 import type { Organization, User } from '@/features/auth/types';
 import { getMembers } from '@/features/members';
 import { getProjects, ProjectsPanel, type ClientProject as Project } from '@/features/projects';
@@ -8,6 +6,7 @@ import {
   getProcedures,
   getProcedureDetails,
   ProcedureManagementPanel,
+  CreateProcedureModal,
   CreationAndExecutionView,
 } from '@/features/procedures';
 import type { Procedure, Execution } from '@shared/types';
@@ -43,6 +42,7 @@ export const LeaderDashboard = ({
   const [executions, setExecutions] = useState<ExecutionListItem[]>([]);
   const [, setIsLoading] = useState(false);
   const [projectCreateTrigger, setProjectCreateTrigger] = useState(0);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Creation and Execution Full Screen State (HU-007 / HU-009 / HU-011)
   const [executionSession, setExecutionSession] = useState<{
@@ -54,23 +54,13 @@ export const LeaderDashboard = ({
     inputs?: any[];
   } | null>(null);
 
-  // Initialize mocks when entering dashboard
-  useEffect(() => {
-    if (!organization) return;
-    const orgId = organization.id;
-    const devId = Number(user.id) || 1;
-    const projId = assignedProjects.length > 0 ? Number(assignedProjects[0].id) : 1;
-    initializeProcedureMocks(orgId, devId, projId);
-  }, [organization, user.id, assignedProjects]);
-
   const loadAllData = useCallback(async () => {
-    if (!organization) return;
     setIsLoading(true);
     try {
       const devId = Number(user.id) || 1;
       const [projectData, memberData, procData, execData] = await Promise.all([
-        getProjects(organization.id, user),
-        getMembers(organization.id),
+        getProjects(),
+        getMembers(),
         getProcedures(),
         getExecutions(devId),
       ]);
@@ -78,17 +68,19 @@ export const LeaderDashboard = ({
       setMembers(memberData);
       setProcedures(procData);
       setExecutions(execData);
+    } catch (err) {
+      console.error('Error cargando datos del líder:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [organization, user]);
+  }, [user]);
 
   useEffect(() => {
     loadAllData();
   }, [loadAllData]);
 
   const handleLogout = () => {
-    storage.clearSession();
+    localStorage.removeItem('pm_auth_session');
     onLogout();
   };
 
@@ -100,11 +92,29 @@ export const LeaderDashboard = ({
   };
 
   // Launch New Procedure Creation & Execution (HU-007)
-  const handleStartCreationAndExecution = () => {
+  const handleOpenCreateModal = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  const handleConfirmCreateProcedure = (data: {
+    name: string;
+    projectId: number;
+    tags: string[];
+  }) => {
+    setIsCreateModalOpen(false);
     setExecutionSession({
       isOpen: true,
       mode: 'CREATION_AND_EXECUTION',
-      procedure: null,
+      procedure: {
+        id: 0,
+        idProject: data.projectId,
+        idCreator: Number(user.id),
+        state: 'DRAFT',
+        name: data.name,
+        description: '',
+        createdAt: new Date().toISOString(),
+        tags: data.tags,
+      },
       execution: null,
     });
   };
@@ -215,7 +225,7 @@ export const LeaderDashboard = ({
       return {
         label: 'Crear Procedimiento',
         icon: <Plus className="w-3.5 h-3.5 stroke-[2.5]" />,
-        onClick: handleStartCreationAndExecution,
+        onClick: handleOpenCreateModal,
       };
     }
     // Para 'EVALUATIONS' retorna undefined (se quita el botón)
@@ -276,7 +286,7 @@ export const LeaderDashboard = ({
                   <ProcedureManagementPanel
                     procedures={procedures}
                     onExecuteProcedure={handleExecuteProcedure}
-                    onNewProcedure={handleStartCreationAndExecution}
+                    onNewProcedure={handleOpenCreateModal}
                   />
                 </div>
               )}
@@ -289,7 +299,7 @@ export const LeaderDashboard = ({
                     onRefresh={loadAllData}
                     onResumeExecution={handleResumeExecution}
                     onSuccessFeedback={showSuccessFeedback}
-                    onCreateAndExecute={handleStartCreationAndExecution}
+                    onCreateAndExecute={handleOpenCreateModal}
                     onSearchProcedures={() => setActiveTab('PROCEDURES')}
                   />
                 </div>
@@ -298,6 +308,13 @@ export const LeaderDashboard = ({
           </div>
         </div>
       </main>
+
+      {/* Modal para Crear Procedimiento */}
+      <CreateProcedureModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreate={handleConfirmCreateProcedure}
+      />
     </div>
   );
 };

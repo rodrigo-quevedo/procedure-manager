@@ -45,4 +45,5 @@ export interface ExecutionWithDetails extends Execution {
   lastEvaluatedAt?: string | null;
   inputs: InputWithCorrections[];
   evaluations?: Evaluation[];
+  completedStepIds?: number[];
 }

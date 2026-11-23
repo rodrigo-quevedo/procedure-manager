@@ -12,18 +12,12 @@ export class ProjectsService {
         organizationId: number,
         userId: number,
         userRole: RoleCode,
+        onlyAssigned?: boolean,
     ): Promise<ProjectDetailResponse[]> {
-        const allProjects = await projectsDAO.findByOrganization(organizationId);
-
-        if (userRole === 'ORGANIZATION') {
-            return allProjects;
+        if (onlyAssigned && userRole !== 'ORGANIZATION') {
+            return projectsDAO.findByMember(userId);
         }
-
-        // Leader or Developer sees projects where they are assigned, plus PUBLIC projects if applicable
-        return allProjects.filter((p) => {
-            const isAssigned = p.leaderIds.includes(userId) || p.memberIds.includes(userId);
-            return isAssigned || p.confidentialityLevel === 'PUBLIC';
-        });
+        return projectsDAO.findByOrganizationOrMember(userId, userRole, organizationId);
     }
 
     async getProjectById(

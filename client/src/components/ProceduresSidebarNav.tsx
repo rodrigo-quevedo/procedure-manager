@@ -38,10 +38,10 @@ export const ProceduresSidebarNav: React.FC<ProceduresSidebarNavProps> = ({
       actionButton={
         onCreateProcedure
           ? {
-              label: 'Crear Procedimiento',
-              icon: <Plus className="w-3.5 h-3.5 stroke-[2.5]" />,
-              onClick: onCreateProcedure,
-            }
+            label: 'Crear Procedimiento',
+            icon: <Plus className="w-3.5 h-3.5 stroke-[2.5]" />,
+            onClick: onCreateProcedure,
+          }
           : undefined
       }
       className={className}
