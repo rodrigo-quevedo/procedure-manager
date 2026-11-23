@@ -76,7 +76,7 @@ export const StepDetailView: React.FC<StepDetailViewProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-y-auto">
       {/* Step Header */}
       <div className="border-b border-gray-100 pb-5">
         <div className="flex items-center justify-between mb-3">
@@ -142,11 +142,10 @@ export const StepDetailView: React.FC<StepDetailViewProps> = ({
               <button
                 type="button"
                 onClick={onToggleCompleted}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer border ${
-                  isCompleted
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer border ${isCompleted
                     ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'
                     : 'bg-white hover:bg-emerald-50 text-emerald-700 border-emerald-300 hover:border-emerald-500'
-                }`}
+                  }`}
                 title={isCompleted ? 'Desmarcar paso como finalizado' : 'Marcar paso como finalizado'}
               >
                 {isCompleted ? (

@@ -15,6 +15,7 @@ import { StepNavigation } from './StepNavigation';
 import { StepDetailView } from './StepDetailView';
 import { saveProcedureHierarchy, updateProcedureState } from '../api/proceduresApi';
 import { createExecution, saveExecutionInput, updateExecutionState } from '@/features/procedure_executions/api/executionsApi';
+import { storage } from '@/services/storage';
 
 interface CreationAndExecutionViewProps {
   currentUser: User;
@@ -441,6 +442,9 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
             onReorderSteps={handleReorderSteps}
             canReorder={!isExecutionOnly}
             completedStepIds={completedStepIds}
+            executionState={executionState}
+            inputs={Object.values(inputsMap)}
+            allCorrectionsCount={storage.getCorrections().length}
           />
 
           {/* Project Selection (HU-007 CA 1) */}
