@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { ExecutionWithDetails } from '../types';
 import type { ProcedureWithDetails, StepWithSections } from '@/features/procedures/types';
 import { getProcedureDetails } from '@/features/procedures/api/proceduresApi';
+import { getCompletedStepIds } from '../api/executionsApi';
 import { StepNavigation } from '@/features/procedures/components/StepNavigation';
 import { StepDetailView } from '@/features/procedures/components/StepDetailView';
 import { EXECUTION_STATE_LABELS } from '@shared/types';
@@ -77,16 +78,18 @@ export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({
   const selectedStep = steps.find((s) => s.id === selectedStepId) || steps[0];
   const stepNumber = steps.findIndex((s) => s.id === selectedStepId) + 1;
 
-  // Pasos completados guardados en localStorage para esta ejecución
-  const completedStepIds = (() => {
-    const raw = localStorage.getItem(`pm_completed_steps_${execution.id}`);
-    if (!raw) return new Set<number>();
-    try {
-      return new Set<number>(JSON.parse(raw) as number[]);
-    } catch {
-      return new Set<number>();
+  // Pasos completados para esta ejecución desde DB
+  const [completedStepIds, setCompletedStepIds] = useState<Set<number>>(() => {
+    return new Set<number>(execution.completedStepIds || []);
+  });
+
+  useEffect(() => {
+    if (execution.id) {
+      getCompletedStepIds(execution.id)
+        .then((ids) => setCompletedStepIds(new Set(ids)))
+        .catch(console.error);
     }
-  })();
+  }, [execution.id]);
 
   // Req 2: Si el estado es PAUSED o CANCELLED, omitir: líder, fecha último envío, fecha última evaluación
   const isPausedOrCancelled = execution.state === 'PAUSED' || execution.state === 'CANCELLED';

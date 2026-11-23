@@ -100,3 +100,10 @@ export interface CreateCorrectionDTO {
     type?: FieldType | null;
     content?: string | null;
 }
+
+export interface StepCompletionDTO {
+    idExecution: number;
+    idStep: number;
+    isCompleted: boolean;
+    completedAt?: string;
+}

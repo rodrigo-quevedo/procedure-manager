@@ -1,13 +1,12 @@
 import { useState, type FormEvent } from 'react';
-import type { User } from '@/features/auth/types';
+import type { MemberResponse, ConfidentialityLevel } from '@pm/shared';
 import { createProject } from '../api/createProject';
-import type { ConfidentialityLevel } from '../types';
 import { ProjectAssignmentFields } from './ProjectAssignmentFields';
 
 interface ProjectFormProps {
-  organizationId: string;
-  actor: User;
-  members: User[];
+  organizationId?: string | number;
+  actor: { id: number; role: string; fullName?: string; name?: string; email: string };
+  members: MemberResponse[];
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -19,10 +18,13 @@ export function ProjectForm({
   onSuccess,
   onCancel,
 }: ProjectFormProps) {
+  const isLeader = actor.role === 'LEADER' || actor.role === 'LIDER';
+  const isOrg = actor.role === 'ORGANIZATION' || actor.role === 'ORGANIZACION';
+
   const [name, setName] = useState('');
   const [confidentiality, setConfidentiality] = useState<'' | ConfidentialityLevel>('');
-  const [leaderIds, setLeaderIds] = useState<string[]>(actor.role === 'LIDER' ? [actor.id] : []);
-  const [memberIds, setMemberIds] = useState<string[]>([]);
+  const [leaderIds, setLeaderIds] = useState<number[]>(isLeader ? [actor.id] : []);
+  const [memberIds, setMemberIds] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,19 +44,22 @@ export function ProjectForm({
       setError('El nivel de confidencialidad es obligatorio.');
       return;
     }
-    if (actor.role === 'ORGANIZACION' && leaderIds.length === 0) {
+    if (isOrg && leaderIds.length === 0) {
       setError('Debes seleccionar al menos un Líder.');
       return;
     }
 
     setIsLoading(true);
     try {
-      await createProject(organizationId, actor, {
-        name,
-        confidentiality,
-        leaderIds,
-        memberIds,
-      });
+      await createProject(
+        {
+          name,
+          confidentiality,
+          leaderIds,
+          memberIds,
+        },
+        organizationId,
+      );
       onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ocurrió un error inesperado al crear el proyecto.');

@@ -41,6 +41,8 @@ export interface Procedure {
     description: string;
     createdAt: string; // ISO Datetime
     tags?: string[];
+    stepNames?: string[];
+    stepDescriptions?: string[];
 }
 
 /**
@@ -60,6 +62,7 @@ export interface Step {
     name: string;
     description: string;
     order: number;
+    isCompleted?: boolean;
 }
 
 /**
@@ -104,6 +107,7 @@ export interface CreateStepDTO {
     order: number;
     idPreviousVersion?: number | null;
     sections?: CreateSectionDTO[];
+    isCompleted?: boolean;
 }
 
 export interface CreateProcedureDTO {

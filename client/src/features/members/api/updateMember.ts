@@ -1,69 +1,31 @@
-import { storage } from '@/services/storage';
-import { validateEmail, validatePassword } from '@/features/auth/utils/validation';
-import type { User } from '@/features/auth/types';
-import type { UpdateMemberDTO } from '../types';
+import type { UpdateMemberDTO, MemberResponse } from '@pm/shared';
 
-export const updateMember = async (data: UpdateMemberDTO): Promise<User> => {
-  await new Promise((resolve) => setTimeout(resolve, 400));
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
 
-  const trimmedName = data.name?.trim() ?? '';
-  const trimmedEmail = data.email?.trim().toLowerCase() ?? '';
-  const role = data.role;
-
-  if (!trimmedName || !trimmedEmail || !role) {
-    throw new Error('El nombre completo, correo electrónico y rol son obligatorios.');
-  }
-
-  if (!validateEmail(trimmedEmail)) {
-    throw new Error('Por favor, ingresa un correo electrónico válido.');
-  }
-
-  const users = storage.getUsers();
-  const member = users.find((u) => u.id === data.id);
-
-  if (!member) {
-    throw new Error('Miembro no encontrado.');
-  }
-
-  // Check if email changed and if it is taken by another user
-  if (trimmedEmail !== member.email.toLowerCase()) {
-    const emailTaken = users.some(
-      (u) => u.id !== member.id && u.email.toLowerCase() === trimmedEmail
-    );
-    if (emailTaken) {
-      throw new Error('El correo electrónico ya se encuentra en uso por otro usuario.');
-    }
-  }
-
-  // Password update validation (if provided)
-  let newPassword = member.password;
-  if (data.password && data.password.trim() !== '') {
-    const passwordValidation = validatePassword(data.password);
-    if (!passwordValidation.isValid) {
-      throw new Error(
-        passwordValidation.message ||
-          'La nueva contraseña debe cumplir con los requisitos de seguridad.'
-      );
-    }
-    newPassword = data.password;
-  }
-
-  const updatedMember: User = {
-    ...member,
-    name: trimmedName,
-    email: trimmedEmail,
-    role,
-    password: newPassword,
-  };
-
-  storage.saveUser(updatedMember);
-
-  // Sync if this user is current
-  const currentUser = storage.getCurrentUser();
-  if (currentUser && currentUser.id === member.id) {
-    storage.setCurrentUser(updatedMember);
-  }
-
-  return updatedMember;
+const getToken = (): string => {
+  const raw = localStorage.getItem('pm_auth_session');
+  if (!raw) throw new Error('Sesión no encontrada. Por favor, inicia sesión nuevamente.');
+  const session = JSON.parse(raw) as { token: string };
+  return session.token;
 };
 
+/**
+ * PATCH /api/members/:id – updates a member's data (HU-004).
+ */
+export const updateMember = async (memberId: number, data: UpdateMemberDTO): Promise<MemberResponse> => {
+  const res = await fetch(`${API_BASE}/api/members/${memberId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({})) as { message?: string };
+    throw new Error(body.message ?? 'Error al actualizar el miembro.');
+  }
+
+  return res.json();
+};

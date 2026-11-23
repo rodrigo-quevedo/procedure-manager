@@ -1,18 +1,18 @@
 import { useMemo, useState } from 'react';
-import type { User } from '@/features/auth/types';
+import type { MemberResponse } from '@pm/shared';
 import { CONFIDENTIALITY_LABELS, type ClientProject as Project } from '../types';
 import { projectMatchesQuery, projectParticipants } from '../utils/search';
 
 interface ProjectListProps {
   projects: Project[];
-  members: User[];
+  members: MemberResponse[];
   isLoading?: boolean;
   onSelectProject: (project: Project) => void;
 }
 
-function namesFor(ids: string[], directory: User[]): string {
+function namesFor(ids: number[], directory: MemberResponse[]): string {
   const names = ids
-    .map((id) => directory.find((person) => person.id === id)?.name)
+    .map((id) => directory.find((person) => person.id === id)?.fullName)
     .filter((name): name is string => Boolean(name));
   if (names.length === 0) return 'Sin asignar';
   if (names.length <= 2) return names.join(', ');
@@ -93,12 +93,12 @@ export function ProjectList({
                   <td onClick={() => onSelectProject(project)} className="px-6 py-4 cursor-pointer">
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold ${
-                        project.confidentiality === 'PRIVATE'
+                        project.confidentialityLevel === 'PRIVATE'
                           ? 'bg-gray-100 text-gray-700 border border-gray-200'
                           : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                       }`}
                     >
-                      {CONFIDENTIALITY_LABELS[project.confidentiality]}
+                      {CONFIDENTIALITY_LABELS[project.confidentialityLevel]}
                     </span>
                   </td>
                   <td onClick={() => onSelectProject(project)} className="px-6 py-4 cursor-pointer text-xs text-gray-700">

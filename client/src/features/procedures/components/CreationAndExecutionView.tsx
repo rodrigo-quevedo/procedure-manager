@@ -14,8 +14,13 @@ import type {
 import { StepNavigation } from './StepNavigation';
 import { StepDetailView } from './StepDetailView';
 import { saveProcedureHierarchy, updateProcedureState } from '../api/proceduresApi';
-import { createExecution, saveExecutionInput, updateExecutionState } from '@/features/procedure_executions/api/executionsApi';
-import { storage } from '@/services/storage';
+import {
+  createExecution,
+  saveExecutionInput,
+  updateExecutionState,
+  getCompletedStepIds,
+  toggleStepCompleted,
+} from '@/features/procedure_executions/api/executionsApi';
 import { Tags } from 'lucide-react';
 
 interface CreationAndExecutionViewProps {
@@ -50,11 +55,10 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
 
   // Procedure metadata
   const [procedureName, setProcedureName] = useState(
-    initialProcedure?.name || 'Despliegue de Microservicio Auth'
+    initialProcedure?.name || ''
   );
   const [procedureDescription, setProcedureDescription] = useState(
-    initialProcedure?.description ||
-      'Procedimiento para desplegar en staging las dependencias del módulo Auth'
+    initialProcedure?.description || ''
   );
   const [isEditingProcName, setIsEditingProcName] = useState(false);
   const [isEditingProcDesc, setIsEditingProcDesc] = useState(false);
@@ -62,33 +66,15 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
   // Steps and hierarchy
   const [steps, setSteps] = useState<Array<Step & { sections: Array<Section & { fields: Field[] }> }>>(() => {
     if (initialSteps && initialSteps.length > 0) return initialSteps;
-    // Default initial step
-    const initialStepId = 1;
-    const initialSectionId = 11;
-    const initialFieldId = 111;
+    // Al crear nuevo procedimiento: solo un paso inicial vacío, sin secciones ni campos precargados
     return [
       {
-        id: initialStepId,
+        id: 1,
         idProcedure: 0,
-        name: 'Configuración y Verificación Previa',
-        description: 'Verificar el entorno local y preparar variables de entorno',
+        name: '',
+        description: '',
         order: 1,
-        sections: [
-          {
-            id: initialSectionId,
-            idStep: initialStepId,
-            name: 'Variables de Entorno',
-            description: 'Credenciales y secretos de configuración',
-            fields: [
-              {
-                id: initialFieldId,
-                idSection: initialSectionId,
-                fieldType: 'TEXT',
-                content: 'Especificar clave JWT: Ingresar la clave de firma token en la consola.',
-              },
-            ],
-          },
-        ],
+        sections: [],
       },
     ];
   });
@@ -97,6 +83,8 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
     if (initialSteps && initialSteps.length > 0) return initialSteps[0].id;
     return 1;
   });
+
+  const [procedureId, setProcedureId] = useState<number>(initialProcedure?.id || 0);
 
   // Execution & Inputs
   const [execution, setExecution] = useState<Execution | null>(initialExecution || null);
@@ -114,29 +102,56 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showBackModal, setShowBackModal] = useState(false);
 
-  // ── Pasos completados: persiste en localStorage por ejecución ─────────────
+  // ── Pasos completados: sincronizado con base de datos por ejecución ─────────
   const [completedStepIds, setCompletedStepIds] = useState<Set<number>>(() => {
-    if (!initialExecution) return new Set();
-    const raw = localStorage.getItem(`pm_completed_steps_${initialExecution.id}`);
-    if (!raw) return new Set();
-    try { return new Set(JSON.parse(raw) as number[]); } catch { return new Set(); }
+    const initial = new Set<number>();
+    (initialSteps || []).forEach((s) => {
+      if (s.isCompleted) initial.add(s.id);
+    });
+    return initial;
   });
 
-  const handleToggleStepCompleted = (stepId: number) => {
+  useEffect(() => {
+    if (execution?.id) {
+      getCompletedStepIds(execution.id)
+        .then((ids) => {
+          setCompletedStepIds((prev) => {
+            const next = new Set(prev);
+            ids.forEach((id) => next.add(id));
+            return next;
+          });
+        })
+        .catch(console.error);
+    }
+  }, [execution?.id]);
+
+  const handleToggleStepCompleted = async (stepId: number) => {
+    const wasCompleted = completedStepIds.has(stepId);
+    const nextCompleted = !wasCompleted;
+
     setCompletedStepIds((prev) => {
       const next = new Set(prev);
-      if (next.has(stepId)) {
+      if (wasCompleted) {
         next.delete(stepId);
       } else {
         next.add(stepId);
       }
-      // Persist to localStorage keyed by execution id
-      const execId = execution?.id ?? initialExecution?.id;
-      if (execId) {
-        localStorage.setItem(`pm_completed_steps_${execId}`, JSON.stringify([...next]));
-      }
       return next;
     });
+
+    setSteps((prev) =>
+      prev.map((s) => (s.id === stepId ? { ...s, isCompleted: nextCompleted } : s))
+    );
+
+    const execId = execution?.id;
+    // Si la ejecución y el paso ya están en la base de datos (id real < 1e11), persistir de inmediato
+    if (execId && stepId < 1e11) {
+      try {
+        await toggleStepCompleted(execId, stepId);
+      } catch (err) {
+        console.error('Error actualizando paso completado en base de datos:', err);
+      }
+    }
   };
 
   // ── Req 1: Derivar el modo de vista desde procedure.state ──────────────────
@@ -159,19 +174,20 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
     executionState === 'APPROVED_FINISHED' ||
     executionState === 'CANCELLED';
 
-  // "hasUnsavedChanges" para el modal de Volver (Req 3):
-  // hay cambios sin guardar si se llenaron inputs pero no se guardó progreso
-  const hasUnsavedChanges = !hasSavedProgress && Object.keys(inputsMap).length > 0;
+  // "hasUnsavedChanges" para el modal de Volver: hay cambios sin guardar si no se ha guardado progreso
+  const hasUnsavedChanges = !hasSavedProgress;
 
-  // Ensure an active execution instance exists
+  // Ensure an active execution instance exists if procedure is already persisted
   useEffect(() => {
-    if (!execution) {
+    if (!execution && procedureId > 0) {
       const devId = Number(currentUser.id) || 1;
-      createExecution(initialProcedure?.id || 0, selectedProjectId, devId).then((exec) => {
-        setExecution(exec);
-      });
+      createExecution(procedureId, selectedProjectId, devId)
+        .then((exec) => {
+          setExecution(exec);
+        })
+        .catch(console.error);
     }
-  }, [currentUser.id, execution, initialProcedure?.id, selectedProjectId]);
+  }, [currentUser.id, execution, procedureId, selectedProjectId]);
 
   // Handle Step selection
   const currentStep = steps.find((s) => s.id === selectedStepId) || steps[0];
@@ -228,13 +244,13 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
   };
 
   // Section operations
-  const handleCreateSection = (stepId: number, title: string) => {
+  const handleCreateSection = (stepId: number, title: string, description: string = '') => {
     const newSectionId = Date.now();
     const newSection: Section & { fields: Field[] } = {
       id: newSectionId,
       idStep: stepId,
       name: title,
-      description: '',
+      description,
       fields: [],
     };
 
@@ -253,6 +269,16 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
         sections: s.sections.map((sec) =>
           sec.id === updated.id ? { ...sec, ...updated } : sec
         ),
+      }))
+    );
+    setHasSavedProgress(false);
+  };
+
+  const handleDeleteSection = (sectionId: number) => {
+    setSteps((prev) =>
+      prev.map((s) => ({
+        ...s,
+        sections: s.sections.filter((sec) => sec.id !== sectionId),
       }))
     );
     setHasSavedProgress(false);
@@ -292,6 +318,24 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
     setHasSavedProgress(false);
   };
 
+  const handleDeleteField = (fieldId: number) => {
+    setSteps((prev) =>
+      prev.map((s) => ({
+        ...s,
+        sections: s.sections.map((sec) => ({
+          ...sec,
+          fields: sec.fields.filter((f) => f.id !== fieldId),
+        })),
+      }))
+    );
+    setInputsMap((prev) => {
+      const next = { ...prev };
+      delete next[fieldId];
+      return next;
+    });
+    setHasSavedProgress(false);
+  };
+
   // Execution Input operation
   const handleSaveInput = async (fieldId: number, fieldType: FieldType, content: string) => {
     if (!execution) return;
@@ -308,49 +352,97 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
     setIsSaving(true);
     try {
       const devId = Number(currentUser.id) || 1;
+      const nameToSave = procedureName.trim() || 'Nuevo Procedimiento';
+      const procIdToSave = procedureId > 0 ? procedureId : undefined;
       const savedProc = await saveProcedureHierarchy({
         procedure: {
-          id: initialProcedure?.id,
+          id: procIdToSave,
           idProject: selectedProjectId,
-          name: procedureName,
-          description: procedureDescription,
+          name: nameToSave,
+          description: procedureDescription || '',
           state: initialProcedure?.state || 'DRAFT',
+          tags: initialProcedure?.tags,
         },
-        steps,
+        steps: steps.map((s, idx) => ({
+          ...s,
+          name: s.name || `Paso ${idx + 1}`,
+          description: s.description || '',
+          isCompleted: completedStepIds.has(s.id) || s.isCompleted,
+        })),
         idCreator: devId,
       });
 
-      if (execution) {
-        execution.idProcedure = savedProc.id;
-        execution.idProject = selectedProjectId;
+      if (!procedureName.trim()) {
+        setProcedureName(nameToSave);
+      }
+
+      setProcedureId(savedProc.id);
+      if (savedProc.steps && savedProc.steps.length > 0) {
+        setSteps(savedProc.steps);
+        const newCompleted = new Set<number>();
+        savedProc.steps.forEach((st) => {
+          if (st.isCompleted) newCompleted.add(st.id);
+        });
+        setCompletedStepIds(newCompleted);
+      }
+
+      let currentExec = execution;
+      if (!currentExec || !currentExec.id) {
+        currentExec = await createExecution(savedProc.id, selectedProjectId, devId);
+        setExecution(currentExec);
+      } else {
+        currentExec.idProcedure = savedProc.id;
+        currentExec.idProject = selectedProjectId;
         // ── Req 2 / Req 3: No sobreescribir el estado de la ejecución al guardar.
         // Solo marcar como ACTIVE si está en modo creación y aún no tiene estado definitivo.
-        if (execution.state === 'ACTIVE') {
-          await updateExecutionState(execution.id, 'ACTIVE');
+        if (currentExec.state === 'ACTIVE') {
+          await updateExecutionState(currentExec.id, 'ACTIVE');
         }
-        // HAS_CORRECTIONS, PAUSED, PENDING_EVALUATION, etc. → no cambiar
       }
 
       setHasSavedProgress(true);
       if (onSuccessFeedback) {
         onSuccessFeedback('Progreso del procedimiento y ejecución guardado correctamente.');
       }
+      return { savedProc, currentExec };
     } finally {
       setIsSaving(false);
     }
   };
 
   // Send for evaluation (HU-007 CA 11 / HU-009 CA 4)
+  // Requisito: Si todos los pasos están finalizados y se guarda y envía,
+  // el estado de la ejecución en db pasa a "evaluacion pendiente" (PENDING_EVALUATION).
   const handleSendForEvaluation = async () => {
-    if (!hasSavedProgress) return;
+    const allCompleted =
+      steps.length > 0 &&
+      steps.every((s) => completedStepIds.has(s.id) || s.isCompleted);
+    if (!allCompleted) {
+      alert('Para enviar a evaluación, todos los pasos deben estar marcados como finalizados.');
+      return;
+    }
+
     setIsSending(true);
     try {
-      if (execution) {
-        await updateExecutionState(execution.id, 'PENDING_EVALUATION');
+      let currentExec = execution;
+      let currentProcId = procedureId;
+      if (!hasSavedProgress || !currentExec || !currentExec.id) {
+        const result = await handleSaveProgress();
+        if (result) {
+          currentExec = result.currentExec;
+          currentProcId = result.savedProc.id;
+        }
       }
-      if (initialProcedure?.id) {
-        await updateProcedureState(initialProcedure.id, 'PENDING_APPROVAL');
+
+      if (currentExec && currentExec.id) {
+        await updateExecutionState(currentExec.id, 'PENDING_EVALUATION');
+        setExecution({ ...currentExec, state: 'PENDING_EVALUATION' });
       }
+
+      if (currentProcId && currentProcId > 0) {
+        await updateProcedureState(currentProcId, 'PENDING_APPROVAL');
+      }
+
       if (onSuccessFeedback) {
         onSuccessFeedback('Procedimiento y ejecución enviados para evaluación por un Líder.');
       }
@@ -361,55 +453,128 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
   };
 
   // Pause execution (HU-011 CA 3)
-  // ── Req 2: Al pausar con estado HAS_CORRECTIONS, mantener ese estado ────────
+  // Requisito: cuando se guarda el procedimiento creado (si es nuevo), y luego se aprieta en pausa o volver,
+  // el estado de la ejecución en la db pasa a pausado.
   const handlePause = async () => {
-    if (!execution) return;
-    await handleSaveProgress();
-    // Si ya tenía correcciones pendientes, NO cambiar a PAUSED; conservar HAS_CORRECTIONS
-    if (execution.state !== 'HAS_CORRECTIONS') {
-      await updateExecutionState(execution.id, 'PAUSED');
+    try {
+      let currentExec = execution;
+      if (!hasSavedProgress || !currentExec || !currentExec.id) {
+        const result = await handleSaveProgress();
+        if (result) currentExec = result.currentExec;
+      }
+
+      if (currentExec && currentExec.id) {
+        if (currentExec.state !== 'HAS_CORRECTIONS') {
+          await updateExecutionState(currentExec.id, 'PAUSED');
+          setExecution({ ...currentExec, state: 'PAUSED' });
+        }
+      }
+
+      if (onSuccessFeedback) {
+        onSuccessFeedback(
+          currentExec?.state === 'HAS_CORRECTIONS'
+            ? 'Progreso guardado. La ejecución sigue en Corrección Pendiente.'
+            : 'Ejecución pausada y progreso guardado.'
+        );
+      }
+      if (onBack) onBack();
+    } catch (err) {
+      console.error('Error al pausar ejecución:', err);
+      if (onBack) onBack();
     }
-    if (onSuccessFeedback) {
-      onSuccessFeedback(
-        execution.state === 'HAS_CORRECTIONS'
-          ? 'Progreso guardado. La ejecución sigue en Corrección Pendiente.'
-          : 'Ejecución pausada y progreso guardado.'
-      );
-    }
-    if (onBack) onBack();
   };
 
   // Cancel execution (HU-011 CA 5)
+  // Requisito: Si se aprieta en cancelar, pasa a cancelado en la DB.
   const handleConfirmCancel = async () => {
-    if (!execution) return;
-    await updateExecutionState(execution.id, 'CANCELLED');
-    setShowCancelModal(false);
-    if (onSuccessFeedback) {
-      onSuccessFeedback('Ejecución cancelada.');
+    try {
+      let currentExec = execution;
+      // Si la ejecución no se había creado en DB aún:
+      if (!currentExec || !currentExec.id) {
+        const devId = Number(currentUser.id) || 1;
+        const nameToSave = procedureName.trim() || 'Nuevo Procedimiento (Cancelado)';
+        const procIdToSave = procedureId > 0 ? procedureId : undefined;
+        const savedProc = await saveProcedureHierarchy({
+          procedure: {
+            id: procIdToSave,
+            idProject: selectedProjectId,
+            name: nameToSave,
+            description: procedureDescription || '',
+            state: initialProcedure?.state || 'DRAFT',
+            tags: initialProcedure?.tags,
+          },
+          steps: steps.map((s, idx) => ({
+            ...s,
+            name: s.name || `Paso ${idx + 1}`,
+            description: s.description || '',
+            isCompleted: completedStepIds.has(s.id) || s.isCompleted,
+          })),
+          idCreator: devId,
+        });
+        setProcedureId(savedProc.id);
+        currentExec = await createExecution(savedProc.id, selectedProjectId, devId);
+        setExecution(currentExec);
+      }
+
+      if (currentExec?.id) {
+        await updateExecutionState(currentExec.id, 'CANCELLED');
+        setExecution({ ...currentExec, state: 'CANCELLED' });
+      }
+    } catch (err) {
+      console.error('Error al cancelar ejecución:', err);
+    } finally {
+      setShowCancelModal(false);
+      if (onSuccessFeedback) {
+        onSuccessFeedback('Ejecución cancelada.');
+      }
+      if (onBack) onBack();
     }
-    if (onBack) onBack();
   };
 
   // ── Req 3: Volver con confirmación si hay cambios sin guardar ──────────────
-  const handleBackRequest = () => {
+  // Requisito: si luego se aprieta en volver (habiéndose guardado el procedimiento nuevo),
+  // el estado de la ejecución en la db pasa a pausado.
+  const handleBackRequest = async () => {
     if (hasUnsavedChanges) {
       setShowBackModal(true);
     } else {
+      if (
+        execution?.id &&
+        execution.state !== 'CANCELLED' &&
+        execution.state !== 'APPROVED_FINISHED' &&
+        execution.state !== 'PENDING_EVALUATION'
+      ) {
+        await updateExecutionState(execution.id, 'PAUSED');
+        setExecution({ ...execution, state: 'PAUSED' });
+      }
       if (onBack) onBack();
     }
   };
 
   const handleBackWithoutSaving = () => {
-    // Volver sin cambiar el estado de la ejecución
     setShowBackModal(false);
     if (onBack) onBack();
   };
 
   const handleBackWithSaving = async () => {
-    // Guardar progreso y volver, sin cambiar el estado de la ejecución
     setShowBackModal(false);
-    await handleSaveProgress();
-    if (onBack) onBack();
+    try {
+      const result = await handleSaveProgress();
+      const exec = result?.currentExec || execution;
+      if (
+        exec?.id &&
+        exec.state !== 'CANCELLED' &&
+        exec.state !== 'APPROVED_FINISHED' &&
+        exec.state !== 'PENDING_EVALUATION'
+      ) {
+        await updateExecutionState(exec.id, 'PAUSED');
+        setExecution({ ...exec, state: 'PAUSED' });
+      }
+    } catch (err) {
+      console.error('Error al guardar y volver:', err);
+    } finally {
+      if (onBack) onBack();
+    }
   };
 
   return (
@@ -445,7 +610,7 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
             completedStepIds={completedStepIds}
             executionState={executionState}
             inputs={Object.values(inputsMap)}
-            allCorrectionsCount={storage.getCorrections().length}
+            allCorrectionsCount={0}
           />
 
           {/* Project Selection (HU-007 CA 1) */}
@@ -515,8 +680,8 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
                 className="inline-flex items-center gap-1.5 max-w-full cursor-pointer group"
                 onDoubleClick={() => !isExecutionOnly && setIsEditingProcName(true)}
               >
-                <span className="text-xs font-semibold text-gray-800 leading-snug">
-                  {procedureName}
+                <span className={`text-xs font-semibold leading-snug ${!procedureName ? 'text-gray-400 italic' : 'text-gray-800'}`}>
+                  {procedureName || 'Sin nombre (clic para editar)'}
                 </span>
                 {!isExecutionOnly && (
                   <button
@@ -571,7 +736,9 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
                 className="inline-flex items-start gap-1.5 max-w-full cursor-pointer group"
                 onDoubleClick={() => !isExecutionOnly && setIsEditingProcDesc(true)}
               >
-                <p className="text-xs text-gray-600 leading-snug">{procedureDescription}</p>
+                <p className={`text-xs leading-snug ${!procedureDescription ? 'text-gray-400 italic' : 'text-gray-600'}`}>
+                  {procedureDescription || 'Sin descripción (clic para editar)'}
+                </p>
                 {!isExecutionOnly && (
                   <button
                     type="button"
@@ -623,15 +790,18 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
               <button
                 type="button"
                 onClick={handleSendForEvaluation}
-                disabled={!hasSavedProgress || isSending}
-                title={!hasSavedProgress ? 'Primero guarde para habilitar el envío' : ''}
+                disabled={isSending}
                 className={`w-full py-2 rounded text-sm font-medium transition-colors shadow-xs ${
-                  hasSavedProgress && !isSending
+                  !isSending
                     ? 'bg-red-600 hover:bg-red-700 text-white border border-red-600 cursor-pointer'
                     : 'bg-white text-red-600 border border-red-300 opacity-60 cursor-not-allowed hover:bg-white'
                 }`}
               >
-                {isSending ? 'Enviando...' : 'Enviar'}
+                {isSending
+                  ? 'Enviando...'
+                  : !hasSavedProgress
+                  ? 'Guardar y Enviar'
+                  : 'Enviar a Evaluación'}
               </button>
             </>
           )}
@@ -663,7 +833,7 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
             isExecutable={true}
             canEditDefinition={!isExecutionOnly}
             isCompleted={completedStepIds.has(currentStep.id)}
-            onToggleCompleted={isExecutionOnly ? () => handleToggleStepCompleted(currentStep.id) : undefined}
+            onToggleCompleted={() => handleToggleStepCompleted(currentStep.id)}
             onUpdateStep={handleUpdateStep}
             onDeleteStep={handleDeleteStep}
             onCreateStep={handleCreateStep}
@@ -671,8 +841,10 @@ export const CreationAndExecutionView: React.FC<CreationAndExecutionViewProps> =
             onCancelExecution={() => setShowCancelModal(true)}
             onCreateSection={handleCreateSection}
             onUpdateSection={handleUpdateSection}
+            onDeleteSection={handleDeleteSection}
             onCreateField={handleCreateField}
             onUpdateField={handleUpdateField}
+            onDeleteField={handleDeleteField}
             onSaveInput={handleSaveInput}
           />
         ) : (

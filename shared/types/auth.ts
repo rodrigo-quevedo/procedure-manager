@@ -84,3 +84,39 @@ export interface AuthSession {
     refreshToken?: string;
     expiresAt: number;
 }
+
+// ---------------------------------------------------------------------------
+// Member DTOs (HU-003 Create Member, HU-004 Update Member)
+// ---------------------------------------------------------------------------
+
+/**
+ * Roles assignable to members within the organization (excludes ORGANIZATION).
+ */
+export type MemberRoleCode = Exclude<RoleCode, 'ORGANIZATION'>;
+
+/**
+ * DTO for creating a new member (HU-003).
+ */
+export interface CreateMemberDTO {
+    fullName: string;
+    email: string;
+    password: string;
+    role: MemberRoleCode;
+}
+
+/**
+ * DTO for updating an existing member (HU-004).
+ * Password is optional – omit to keep the existing one.
+ */
+export interface UpdateMemberDTO {
+    fullName?: string;
+    email?: string;
+    password?: string;
+    role?: MemberRoleCode;
+}
+
+/**
+ * Response payload for member list / single member endpoints.
+ * Identical to User without the password hash.
+ */
+export type MemberResponse = Omit<User, 'passwordHash'>;

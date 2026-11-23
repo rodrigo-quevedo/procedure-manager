@@ -1,34 +1,34 @@
-import { storage } from '@/services/storage';
-import type { User } from '@/features/auth/types';
+import type { MemberResponse } from '@pm/shared';
 
-export const toggleMemberStatus = async (
-  memberId: string,
-  newStatus: boolean
-): Promise<User> => {
-  await new Promise((resolve) => setTimeout(resolve, 300));
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
 
-  const users = storage.getUsers();
-  const member = users.find((u) => u.id === memberId);
-
-  if (!member) {
-    throw new Error('Miembro no encontrado.');
-  }
-
-  const updatedMember: User = {
-    ...member,
-    isActive: newStatus,
-    // If activating, reset failed attempts so they can log in freely
-    failedLoginAttempts: newStatus ? 0 : member.failedLoginAttempts,
-  };
-
-  storage.saveUser(updatedMember);
-
-  // If the currently logged in user happens to be this member, sync active session
-  const currentUser = storage.getCurrentUser();
-  if (currentUser && currentUser.id === memberId) {
-    storage.setCurrentUser(updatedMember);
-  }
-
-  return updatedMember;
+const getToken = (): string => {
+  const raw = localStorage.getItem('pm_auth_session');
+  if (!raw) throw new Error('Sesión no encontrada. Por favor, inicia sesión nuevamente.');
+  const session = JSON.parse(raw) as { token: string };
+  return session.token;
 };
 
+/**
+ * PATCH /api/members/:id/status – enables or disables a member account (HU-004).
+ */
+export const toggleMemberStatus = async (
+  memberId: number,
+  isActive: boolean,
+): Promise<MemberResponse> => {
+  const res = await fetch(`${API_BASE}/api/members/${memberId}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify({ isActive }),
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({})) as { message?: string };
+    throw new Error(body.message ?? 'Error al cambiar el estado del miembro.');
+  }
+
+  return res.json();
+};

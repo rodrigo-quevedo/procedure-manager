@@ -1,11 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { updateMember } from '../api/updateMember';
-import type { User } from '@/features/auth/types';
-import type { MemberRole } from '../types';
+import type { MemberResponse, MemberRoleCode } from '@pm/shared';
 
 interface MemberDetailProps {
-  member: User;
-  onUpdated: (updatedMember: User) => void;
+  member: MemberResponse;
+  onUpdated: (updatedMember: MemberResponse) => void;
   onBack: () => void;
 }
 
@@ -14,11 +13,11 @@ export const MemberDetail = ({
   onUpdated,
   onBack,
 }: MemberDetailProps) => {
-  const [name, setName] = useState(member.name);
+  const [fullName, setFullName] = useState(member.fullName);
   const [email, setEmail] = useState(member.email);
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<MemberRole>(
-    member.role === 'LIDER' ? 'LIDER' : 'DESARROLLADOR'
+  const [role, setRole] = useState<MemberRoleCode>(
+    member.role === 'LEADER' ? 'LEADER' : 'DEVELOPER'
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +28,7 @@ export const MemberDetail = ({
     setError(null);
     setSuccessMessage(null);
 
-    if (!name.trim()) {
+    if (!fullName.trim()) {
       setError('El nombre completo es obligatorio.');
       return;
     }
@@ -42,10 +41,9 @@ export const MemberDetail = ({
     setIsLoading(true);
 
     try {
-      const updated = await updateMember({
-        id: member.id,
-        name,
-        email,
+      const updated = await updateMember(member.id, {
+        fullName: fullName.trim(),
+        email: email.trim(),
         password: password.trim() ? password : undefined,
         role,
       });
@@ -151,16 +149,16 @@ export const MemberDetail = ({
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <div>
           <label
-            htmlFor="editName"
+            htmlFor="editFullName"
             className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1"
           >
             Nombre Completo
           </label>
           <input
-            id="editName"
+            id="editFullName"
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
             className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-md shadow-xs focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-colors"
           />
         </div>
@@ -191,11 +189,11 @@ export const MemberDetail = ({
           <select
             id="editRole"
             value={role}
-            onChange={(e) => setRole(e.target.value as MemberRole)}
+            onChange={(e) => setRole(e.target.value as MemberRoleCode)}
             className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-md shadow-xs focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-colors cursor-pointer"
           >
-            <option value="DESARROLLADOR">Desarrollador</option>
-            <option value="LIDER">Líder</option>
+            <option value="DEVELOPER">Desarrollador</option>
+            <option value="LEADER">Líder</option>
           </select>
         </div>
 
@@ -239,4 +237,3 @@ export const MemberDetail = ({
     </div>
   );
 };
-
