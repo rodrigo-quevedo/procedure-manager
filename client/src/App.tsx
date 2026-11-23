@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { RegisterForm, LoginForm } from '@/features/auth';
 import type { AuthSession, Organization, User } from '@/features/auth';
-import { OrganizationDashboard } from '@/components/OrganizationDashboard';
-import { MemberDashboard } from '@/components/MemberDashboard';
+import { OrganizationDashboard } from '@/components/dashboards/OrganizationDashboard';
+import { DeveloperDashboard } from '@/components/dashboards/DeveloperDashboard';
+import { LeaderDashboard } from '@/components/dashboards/LeaderDashboard';
 import { storage } from '@/services/storage';
+import ExecutionManagementMock from './examples/ExecutionManagement';
 
 type AuthView = 'register' | 'login';
 
@@ -45,6 +47,7 @@ export function App() {
 
   // Routing by role after authentication
   if (currentUser) {
+    // Routing by role after authentication
     if (currentUser.role === 'ORGANIZACION') {
       return (
         <OrganizationDashboard
@@ -55,9 +58,19 @@ export function App() {
       );
     }
 
-    // LIDER or DESARROLLADOR
+    if (currentUser.role === 'LIDER') {
+      return (
+        <LeaderDashboard
+          user={currentUser}
+          organization={currentOrganization}
+          onLogout={handleLogout}
+        />
+      );
+    }
+
+    // DESARROLLADOR
     return (
-      <MemberDashboard
+      <DeveloperDashboard
         user={currentUser}
         organization={currentOrganization}
         onLogout={handleLogout}
@@ -66,7 +79,7 @@ export function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <>
       {currentAuthView === 'register' ? (
         <RegisterForm
           onSuccess={handleAuthSuccess}
@@ -78,8 +91,10 @@ export function App() {
           onNavigateToRegister={() => setCurrentAuthView('register')}
         />
       )}
-    </div>
+    </>
   );
+
+  // return <ExecutionManagementMock />;
 
 
 }

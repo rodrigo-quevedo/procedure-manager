@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { loginUser } from '../api/loginUser';
 import type { AuthSession } from '../types';
+import logoImg from '@/assets/logo.png';
 
 interface LoginFormProps {
   onSuccess: (session: AuthSession) => void;
@@ -47,32 +48,64 @@ export const LoginForm = ({
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm">
-        <div className="mb-6 text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-50 text-red-600 mb-3">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-              />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
-            Iniciar Sesión
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Ingresa a tu cuenta para acceder al sistema de procedimientos.
-          </p>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shadow-xs">
+        <div className="flex items-center gap-3">
+          <img
+            src={logoImg}
+            alt="Logo"
+            className="w-9 h-9 object-contain shrink-0"
+          />
+          <span className="h-5 w-px bg-gray-200" />
+          <h1 className="font-extrabold text-gray-700 text-lg tracking-normal">
+            Gestor de Procedimientos de Desarrollo
+          </h1>
         </div>
+
+        <nav className="flex items-center gap-2">
+          <button
+            type="button"
+            className="px-3.5 py-1.5 text-sm font-semibold rounded-md bg-red-600 text-white shadow-xs cursor-default"
+          >
+            Iniciar Sesión
+          </button>
+          <button
+            type="button"
+            onClick={onNavigateToRegister}
+            className="px-3.5 py-1.5 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
+          >
+            Registrarse
+          </button>
+        </nav>
+      </header>
+
+      <main className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-md mx-auto">
+          <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm">
+            <div className="mb-6 text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-50 text-red-600 mb-3">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+                Iniciar Sesión
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Ingresa a tu cuenta para acceder al sistema de procedimientos.
+              </p>
+            </div>
 
         {error && (
           <div className="mb-5 p-3 rounded-md bg-red-50 border border-red-200 text-sm text-red-700 flex items-start gap-2">
@@ -177,6 +210,8 @@ export const LoginForm = ({
         </div>
       </div>
     </div>
+  </main>
+</div>
   );
 };
 

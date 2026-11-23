@@ -11,16 +11,24 @@ interface ProjectsPanelProps {
   organizationId: string;
   actor: User;
   onSuccess: (message: string) => void;
+  createTrigger?: number;
 }
 
 type PanelView = 'list' | 'create' | 'detail';
 
-export function ProjectsPanel({ organizationId, actor, onSuccess }: ProjectsPanelProps) {
+export function ProjectsPanel({ organizationId, actor, onSuccess, createTrigger }: ProjectsPanelProps) {
   const [view, setView] = useState<PanelView>('list');
   const [projects, setProjects] = useState<Project[]>([]);
   const [members, setMembers] = useState<User[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (createTrigger && createTrigger > 0) {
+      setSelectedProject(null);
+      setView('create');
+    }
+  }, [createTrigger]);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);

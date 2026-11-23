@@ -1,10 +1,28 @@
 import type { User, Organization } from '@/features/auth/types';
 import type { ClientProject } from '@/features/projects/types';
+import type {
+  Procedure,
+  Step,
+  Section,
+  Field,
+  Execution,
+  Input,
+  Evaluation,
+  Correction,
+} from '@shared/types';
 
 const STORAGE_KEYS = {
   ORGANIZATIONS: 'pm_organizations',
   USERS: 'pm_users',
   PROJECTS: 'pm_projects',
+  PROCEDURES: 'pm_procedures',
+  STEPS: 'pm_steps',
+  SECTIONS: 'pm_sections',
+  FIELDS: 'pm_fields',
+  EXECUTIONS: 'pm_executions',
+  INPUTS: 'pm_inputs',
+  EVALUATIONS: 'pm_evaluations',
+  CORRECTIONS: 'pm_corrections',
   CURRENT_USER: 'currentUser',
   CURRENT_ORGANIZATION: 'currentOrganization',
 } as const;
@@ -96,6 +114,7 @@ export const storage = {
     localStorage.removeItem(STORAGE_KEYS.CURRENT_ORGANIZATION);
   },
 
+  // Projects
   getProjects(): ClientProject[] {
     return safeParse<ClientProject[]>(localStorage.getItem(STORAGE_KEYS.PROJECTS), []);
   },
@@ -113,5 +132,142 @@ export const storage = {
 
   getProjectsByOrganization(organizationId: string): ClientProject[] {
     return storage.getProjects().filter((project) => project.organizationId === organizationId);
+  },
+
+  // Procedures
+  getProcedures(): Procedure[] {
+    return safeParse<Procedure[]>(localStorage.getItem(STORAGE_KEYS.PROCEDURES), []);
+  },
+
+  saveProcedure(procedure: Procedure): void {
+    const items = storage.getProcedures();
+    const idx = items.findIndex((p) => p.id === procedure.id);
+    if (idx >= 0) {
+      items[idx] = procedure;
+    } else {
+      items.push(procedure);
+    }
+    localStorage.setItem(STORAGE_KEYS.PROCEDURES, JSON.stringify(items));
+  },
+
+  getProcedureById(id: number): Procedure | null {
+    return storage.getProcedures().find((p) => p.id === id) || null;
+  },
+
+  // Steps
+  getSteps(): Step[] {
+    return safeParse<Step[]>(localStorage.getItem(STORAGE_KEYS.STEPS), []);
+  },
+
+  saveSteps(steps: Step[]): void {
+    localStorage.setItem(STORAGE_KEYS.STEPS, JSON.stringify(steps));
+  },
+
+  getStepsByProcedure(procedureId: number): Step[] {
+    return storage
+      .getSteps()
+      .filter((s) => s.idProcedure === procedureId)
+      .sort((a, b) => a.order - b.order);
+  },
+
+  // Sections
+  getSections(): Section[] {
+    return safeParse<Section[]>(localStorage.getItem(STORAGE_KEYS.SECTIONS), []);
+  },
+
+  saveSections(sections: Section[]): void {
+    localStorage.setItem(STORAGE_KEYS.SECTIONS, JSON.stringify(sections));
+  },
+
+  getSectionsByStep(stepId: number): Section[] {
+    return storage.getSections().filter((sec) => sec.idStep === stepId);
+  },
+
+  // Fields
+  getFields(): Field[] {
+    return safeParse<Field[]>(localStorage.getItem(STORAGE_KEYS.FIELDS), []);
+  },
+
+  saveFields(fields: Field[]): void {
+    localStorage.setItem(STORAGE_KEYS.FIELDS, JSON.stringify(fields));
+  },
+
+  getFieldsBySection(sectionId: number): Field[] {
+    return storage.getFields().filter((f) => f.idSection === sectionId);
+  },
+
+  // Executions
+  getExecutions(): Execution[] {
+    return safeParse<Execution[]>(localStorage.getItem(STORAGE_KEYS.EXECUTIONS), []);
+  },
+
+  saveExecution(execution: Execution): void {
+    const items = storage.getExecutions();
+    const idx = items.findIndex((e) => e.id === execution.id);
+    if (idx >= 0) {
+      items[idx] = execution;
+    } else {
+      items.push(execution);
+    }
+    localStorage.setItem(STORAGE_KEYS.EXECUTIONS, JSON.stringify(items));
+  },
+
+  getExecutionById(id: number): Execution | null {
+    return storage.getExecutions().find((e) => e.id === id) || null;
+  },
+
+  // Inputs
+  getInputs(): Input[] {
+    return safeParse<Input[]>(localStorage.getItem(STORAGE_KEYS.INPUTS), []);
+  },
+
+  saveInputs(inputs: Input[]): void {
+    localStorage.setItem(STORAGE_KEYS.INPUTS, JSON.stringify(inputs));
+  },
+
+  getInputsByExecution(executionId: number): Input[] {
+    return storage.getInputs().filter((inp) => inp.idExecution === executionId);
+  },
+
+  saveInput(input: Input): void {
+    const inputs = storage.getInputs();
+    const idx = inputs.findIndex((i) => i.id === input.id);
+    if (idx >= 0) {
+      inputs[idx] = input;
+    } else {
+      inputs.push(input);
+    }
+    localStorage.setItem(STORAGE_KEYS.INPUTS, JSON.stringify(inputs));
+  },
+
+  // Evaluations & Corrections (for viewing examples / details)
+  getEvaluations(): Evaluation[] {
+    return safeParse<Evaluation[]>(localStorage.getItem(STORAGE_KEYS.EVALUATIONS), []);
+  },
+
+  saveEvaluation(evaluation: Evaluation): void {
+    const evals = storage.getEvaluations();
+    const idx = evals.findIndex((e) => e.id === evaluation.id);
+    if (idx >= 0) {
+      evals[idx] = evaluation;
+    } else {
+      evals.push(evaluation);
+    }
+    localStorage.setItem(STORAGE_KEYS.EVALUATIONS, JSON.stringify(evals));
+  },
+
+  getCorrections(): Correction[] {
+    return safeParse<Correction[]>(localStorage.getItem(STORAGE_KEYS.CORRECTIONS), []);
+  },
+
+  saveCorrection(correction: Correction): void {
+    const corrs = storage.getCorrections();
+    const idx = corrs.findIndex((c) => c.id === correction.id);
+    if (idx >= 0) {
+      corrs[idx] = correction;
+    } else {
+      corrs.push(correction);
+    }
+    localStorage.setItem(STORAGE_KEYS.CORRECTIONS, JSON.stringify(corrs));
   },
 };
