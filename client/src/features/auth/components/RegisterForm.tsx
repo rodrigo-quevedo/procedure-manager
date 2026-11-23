@@ -1,16 +1,15 @@
 import { useState, type FormEvent } from 'react';
 import { registerOrganization } from '../api/registerOrganization';
 import { validatePassword } from '../utils/validation';
-import type { AuthSession } from '../types';
 import logoImg from '@/assets/logo.png';
 
 interface RegisterFormProps {
-  onSuccess: (session: AuthSession) => void;
+  /** Called after a successful registration (no session: user must log in). */
+  onSuccess: () => void;
   onNavigateToLogin: () => void;
 }
 
 export const RegisterForm = ({
-  onSuccess: _onSuccess,
   onNavigateToLogin,
 }: RegisterFormProps) => {
   const [organizationName, setOrganizationName] = useState('');

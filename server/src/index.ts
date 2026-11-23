@@ -2,7 +2,9 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { getDb } from './config/database';
+import { runMigrations } from './database/migrate';
 import { ROLE_LABELS, type RoleCode } from '@pm/shared';
+import authRouter from './features/auth/auth.router';
 
 dotenv.config();
 
@@ -12,6 +14,9 @@ const PORT = process.env.PORT || 5000;
 // Middlewares globales
 app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173' }));
 app.use(express.json());
+
+// Rutas de autenticación
+app.use('/api/auth', authRouter);
 
 // Endpoint de verificación (Health Check + prueba de @pm/shared)
 app.get('/api/health', async (_req: Request, res: Response) => {
@@ -38,6 +43,7 @@ app.get('/api/health', async (_req: Request, res: Response) => {
 const startServer = async () => {
     try {
         await getDb();
+        await runMigrations();
         console.log('✅ SQLite database initialized successfully.');
 
         app.listen(PORT, () => {
