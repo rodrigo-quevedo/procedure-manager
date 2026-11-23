@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { storage } from '@/services/storage';
 import type { Organization, User } from '@/features/auth/types';
+import type { MemberResponse } from '@pm/shared';
 import {
   MemberList,
   MemberForm,
@@ -28,16 +29,16 @@ export const OrganizationDashboard = ({
   onLogout,
 }: OrganizationDashboardProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('PROJECTS');
-  const [members, setMembers] = useState<User[]>([]);
+  const [members, setMembers] = useState<MemberResponse[]>([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<User | null>(null);
+  const [selectedMember, setSelectedMember] = useState<MemberResponse | null>(null);
   const [isCreatingMember, setIsCreatingMember] = useState(false);
   const [projectCreateTrigger, setProjectCreateTrigger] = useState(0);
 
   // Confirmation modal state for enable/disable member
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
-    member: User | null;
+    member: MemberResponse | null;
     action: 'ENABLE' | 'DISABLE';
   }>({
     isOpen: false,
@@ -57,15 +58,16 @@ export const OrganizationDashboard = ({
   };
 
   const loadMembers = useCallback(async () => {
-    if (!organization) return;
     setIsLoadingMembers(true);
     try {
-      const data = await getMembers(organization.id);
+      const data = await getMembers();
       setMembers(data);
+    } catch (error) {
+      console.error('Error cargando miembros:', error);
     } finally {
       setIsLoadingMembers(false);
     }
-  }, [organization]);
+  }, []);
 
   useEffect(() => {
     loadMembers();
@@ -77,7 +79,7 @@ export const OrganizationDashboard = ({
   };
 
   // Trigger modal when clicking Habilitar / Inhabilitar
-  const handleOpenStatusModal = (targetMember: User) => {
+  const handleOpenStatusModal = (targetMember: MemberResponse) => {
     setConfirmModal({
       isOpen: true,
       member: targetMember,
@@ -106,8 +108,8 @@ export const OrganizationDashboard = ({
           ? '¡La cuenta del Miembro ha sido habilitada exitosamente!'
           : '¡La cuenta del Miembro ha sido inhabilitada exitosamente!'
       );
-    } catch {
-      // Error handled quietly or modal closes
+    } catch (error) {
+      console.error('Error al cambiar estado del miembro:', error);
     } finally {
       setIsTogglingStatus(false);
     }
@@ -208,7 +210,7 @@ export const OrganizationDashboard = ({
                 />
               )}
 
-              {/* Tab 2: Members Management (HU-003 & HU-004) */}
+              {/* Tab 2: Members Management (HU-003 & HU-004) - Conectado al Backend */}
               {activeTab === 'MEMBERS' && (
                 <div className="space-y-6">
                   {/* View 1: Member Detail View */}
@@ -227,7 +229,6 @@ export const OrganizationDashboard = ({
                   ) : isCreatingMember ? (
                     /* View 2: Create Member Form */
                     <MemberForm
-                      organizationId={organization?.id || ''}
                       onSuccess={() => {
                         loadMembers();
                         setIsCreatingMember(false);
@@ -283,8 +284,8 @@ export const OrganizationDashboard = ({
         }
         message={
           confirmModal.action === 'DISABLE'
-            ? `¿Estás seguro de que deseas inhabilitar la cuenta de ${confirmModal.member?.name}? El miembro no podrá iniciar sesión en el sistema.`
-            : `¿Estás seguro de que deseas habilitar la cuenta de ${confirmModal.member?.name}? El miembro podrá volver a iniciar sesión.`
+            ? `¿Estás seguro de que deseas inhabilitar la cuenta de ${confirmModal.member?.fullName}? El miembro no podrá iniciar sesión en el sistema.`
+            : `¿Estás seguro de que deseas habilitar la cuenta de ${confirmModal.member?.fullName}? El miembro podrá volver a iniciar sesión.`
         }
         confirmText={
           confirmModal.action === 'DISABLE'

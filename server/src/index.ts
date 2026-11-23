@@ -5,6 +5,7 @@ import { getDb } from './config/database';
 import { runMigrations } from './database/migrate';
 import { ROLE_LABELS, type RoleCode } from '@pm/shared';
 import authRouter from './features/auth/auth.router';
+import membersRouter from './features/members/members.router';
 
 dotenv.config();
 
@@ -15,8 +16,9 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173' }));
 app.use(express.json());
 
-// Rutas de autenticación
-app.use('/api/auth', authRouter);
+// Rutas
+app.use('/api/auth',    authRouter);
+app.use('/api/members', membersRouter);
 
 // Endpoint de verificación (Health Check + prueba de @pm/shared)
 app.get('/api/health', async (_req: Request, res: Response) => {
