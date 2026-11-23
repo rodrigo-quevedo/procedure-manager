@@ -1,6 +1,21 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { ExecutionWithDetails } from '../types';
-import { FIELD_TYPE_LABELS, EXECUTION_STATE_LABELS } from '@shared/types';
+import type { ProcedureWithDetails, StepWithSections } from '@/features/procedures/types';
+import { getProcedureDetails } from '@/features/procedures/api/proceduresApi';
+import { StepNavigation } from '@/features/procedures/components/StepNavigation';
+import { StepDetailView } from '@/features/procedures/components/StepDetailView';
+import { EXECUTION_STATE_LABELS } from '@shared/types';
+import type { Input } from '@shared/types';
+import {
+  User,
+  ShieldCheck,
+  Calendar,
+  Clock,
+  FileText,
+  AlertCircle,
+  X,
+  PlaySquare,
+} from 'lucide-react';
 
 interface ExecutionDetailModalProps {
   execution: ExecutionWithDetails;
@@ -13,130 +28,232 @@ export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({
   onClose,
   onResume,
 }) => {
+  const [procedure, setProcedure] = useState<ProcedureWithDetails | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedStepId, setSelectedStepId] = useState<number>(1);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchProcedure = async () => {
+      if (!execution.idProcedure) return;
+      setIsLoading(true);
+      try {
+        const details = await getProcedureDetails(execution.idProcedure);
+        if (isMounted && details) {
+          setProcedure(details);
+          if (details.steps && details.steps.length > 0) {
+            setSelectedStepId(details.steps[0].id);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching procedure details:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    fetchProcedure();
+    return () => {
+      isMounted = false;
+    };
+  }, [execution.idProcedure]);
+
+  // Contar correcciones totales
+  const totalCorrections = execution.inputs.reduce(
+    (acc, inp) => acc + (inp.corrections?.length || 0),
+    0
+  );
+
+  // Mapear inputs por fieldId para pasarlos al StepDetailView
+  const inputsMap = execution.inputs.reduce((acc, input) => {
+    acc[input.idField] = input;
+    return acc;
+  }, {} as Record<number, Input>);
+
+  // Obtener pasos del procedimiento
+  const steps: StepWithSections[] = procedure?.steps || [];
+  const selectedStep = steps.find((s) => s.id === selectedStepId) || steps[0];
+  const stepNumber = steps.findIndex((s) => s.id === selectedStepId) + 1;
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl border border-gray-200 max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5">
+      <div className="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        {/* Header Superior del Modal */}
+        <div className="px-6 py-3.5 border-b border-gray-200 flex items-center justify-between bg-white shrink-0">
+          <div className="flex items-center gap-3">
+            <span
+              className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
                 execution.state === 'PENDING_EVALUATION'
-                  ? 'bg-gray-200 text-gray-700 border border-gray-300'
-                  : 'bg-blue-100 text-blue-800'
-              }`}>
-                {execution.state === 'PENDING_EVALUATION' ? 'Evaluación Pendiente' : EXECUTION_STATE_LABELS[execution.state]}
-              </span>
-              <span className="text-xs text-gray-500">Ejecución #{execution.id}</span>
-            </div>
-            <h2 className="text-base font-bold text-gray-900 mt-1">
+                  ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                  : execution.state === 'HAS_CORRECTIONS'
+                    ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                    : execution.state === 'APPROVED_FINISHED'
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                      : execution.state === 'CANCELLED'
+                        ? 'bg-gray-100 text-gray-700 border border-gray-200'
+                        : 'bg-blue-100 text-blue-800'
+              }`}
+            >
+              {EXECUTION_STATE_LABELS[execution.state] || execution.state}
+            </span>
+            <div className="h-4 w-px bg-gray-200" />
+            <h2 className="text-base font-bold text-gray-900 truncate">
               {execution.procedureName}
             </h2>
+            <span className="text-xs text-gray-400 font-medium">
+              (Ejecución #{execution.id})
+            </span>
           </div>
+
           <button
             type="button"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-700 rounded-lg p-1 hover:bg-gray-100 transition-colors cursor-pointer"
+            title="Cerrar"
           >
-            ✕
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto space-y-5 flex-1 text-xs">
-          {/* Metadata Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3 bg-gray-50 border border-gray-100 rounded-lg">
-              <span className="text-[10px] uppercase font-bold text-gray-400">Desarrollador</span>
-              <p className="text-xs font-semibold text-gray-900 mt-0.5 truncate">
+        {/* Sección de Metadatos de la Ejecución */}
+        <div className="bg-gray-50/80 border-b border-gray-200 px-6 py-3 shrink-0">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-xs">
+            {/* Nombre Dev */}
+            <div className="bg-white p-2.5 rounded-lg border border-gray-200/80 shadow-2xs">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                <User className="w-3 h-3 text-gray-400" /> Desarrollador
+              </span>
+              <p className="font-semibold text-gray-900 mt-0.5 truncate" title={execution.developerName}>
                 {execution.developerName}
               </p>
             </div>
-            <div className="p-3 bg-gray-50 border border-gray-100 rounded-lg">
-              <span className="text-[10px] uppercase font-bold text-gray-400">Inicio</span>
-              <p className="text-xs font-semibold text-gray-900 mt-0.5">
+
+            {/* Nombre Líder */}
+            <div className="bg-white p-2.5 rounded-lg border border-gray-200/80 shadow-2xs">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-gray-400" /> Líder
+              </span>
+              <p className="font-semibold text-gray-900 mt-0.5 truncate" title={execution.leaderName || execution.evaluatorName || 'No asignado'}>
+                {execution.leaderName || execution.evaluatorName || 'No asignado'}
+              </p>
+            </div>
+
+            {/* Fecha Inicio */}
+            <div className="bg-white p-2.5 rounded-lg border border-gray-200/80 shadow-2xs">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                <Calendar className="w-3 h-3 text-gray-400" /> Fecha Inicio
+              </span>
+              <p className="font-semibold text-gray-900 mt-0.5">
                 {new Date(execution.startedAt).toLocaleDateString()}
               </p>
             </div>
-            <div className="p-3 bg-gray-50 border border-gray-100 rounded-lg">
-              <span className="text-[10px] uppercase font-bold text-gray-400">Total Inputs</span>
-              <p className="text-xs font-semibold text-gray-900 mt-0.5">{execution.inputs.length}</p>
-            </div>
-            <div className="p-3 bg-gray-50 border border-gray-100 rounded-lg">
-              <span className="text-[10px] uppercase font-bold text-gray-400">Fin</span>
-              <p className="text-xs font-semibold text-gray-900 mt-0.5">
-                {execution.endedAt ? new Date(execution.endedAt).toLocaleDateString() : 'En curso'}
+
+            {/* Última Fecha Envío */}
+            <div className="bg-white p-2.5 rounded-lg border border-gray-200/80 shadow-2xs">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                <Clock className="w-3 h-3 text-gray-400" /> Último Envío
+              </span>
+              <p className="font-semibold text-gray-900 mt-0.5">
+                {execution.lastSubmittedAt
+                  ? new Date(execution.lastSubmittedAt).toLocaleDateString()
+                  : 'Sin envíos'}
               </p>
             </div>
-          </div>
 
-          {/* Inputs Section */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold text-red-600 uppercase tracking-wider">
-              Datos e Inputs Registrados ({execution.inputs.length})
-            </h3>
-            {execution.inputs.length === 0 ? (
-              <p className="text-gray-400 italic bg-gray-50 p-4 rounded-lg text-center">
-                Aún no hay inputs completados en esta ejecución.
+            {/* Fecha Última Evaluación */}
+            <div className="bg-white p-2.5 rounded-lg border border-gray-200/80 shadow-2xs">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                <Clock className="w-3 h-3 text-gray-400" /> Últ. Evaluación
+              </span>
+              <p className="font-semibold text-gray-900 mt-0.5">
+                {execution.lastEvaluatedAt
+                  ? new Date(execution.lastEvaluatedAt).toLocaleDateString()
+                  : 'Pendiente'}
               </p>
-            ) : (
-              <div className="space-y-3">
-                {execution.inputs.map((inp, idx) => (
-                  <div key={inp.id} className="p-3.5 rounded-lg border border-gray-200 bg-white space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 text-[10px] font-bold flex items-center justify-center">
-                          {idx + 1}
-                        </span>
-                        <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-700">
-                          {FIELD_TYPE_LABELS[inp.fieldType]}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-gray-400">
-                        {new Date(inp.createdAt).toLocaleString()}
-                      </span>
-                    </div>
+            </div>
 
-                    <div className="bg-gray-50 p-2.5 rounded border border-gray-100 font-mono text-xs text-gray-800 whitespace-pre-wrap">
-                      {inp.content}
-                    </div>
-
-                    {inp.corrections && inp.corrections.length > 0 && (
-                      <div className="mt-2 pl-3 border-l-2 border-red-500 bg-red-50/50 p-2 rounded text-[11px] text-red-800">
-                        <span className="font-bold block mb-1">Correcciones solicitadas:</span>
-                        {inp.corrections.map((corr) => (
-                          <div key={corr.id} className="text-xs">
-                            {corr.content}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+            {/* Cantidad Inputs y Correcciones */}
+            <div className="bg-white p-2.5 rounded-lg border border-gray-200/80 shadow-2xs flex flex-col justify-center">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-gray-500 flex items-center gap-1">
+                  <FileText className="w-3 h-3 text-blue-500" /> Inputs:
+                </span>
+                <span className="font-bold text-gray-900">{execution.inputs.length}</span>
               </div>
-            )}
+              <div className="flex items-center justify-between text-[11px] mt-1 pt-1 border-t border-gray-100">
+                <span className="text-gray-500 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3 text-rose-500" /> Correcciones:
+                </span>
+                <span className={`font-bold ${totalCorrections > 0 ? 'text-rose-600' : 'text-gray-900'}`}>
+                  {totalCorrections}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-3 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 border border-gray-200 hover:bg-gray-100 text-gray-600 text-xs font-medium rounded-lg cursor-pointer"
-          >
-            Cerrar
-          </button>
+        {/* Cuerpo Principal: Réplica de la vista Create and Execute (Modo sólo lectura) */}
+        <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50">
+          {isLoading ? (
+            <div className="text-center py-20 text-gray-400 text-sm">
+              Cargando detalle de pasos y ejecución...
+            </div>
+          ) : !selectedStep ? (
+            <div className="text-center py-20 text-gray-400 text-sm">
+              No hay pasos disponibles en este procedimiento.
+            </div>
+          ) : (
+            <div className="flex flex-col md:flex-row gap-6 items-start">
+              {/* Barra lateral de Navegación de Pasos (sin arrastre ni reordenamiento) */}
+              <div className="w-full md:w-56 shrink-0">
+                <StepNavigation
+                  steps={steps}
+                  selectedStepId={selectedStepId}
+                  onSelectStep={setSelectedStepId}
+                  canReorder={false}
+                />
+              </div>
 
-          {execution.state === 'PAUSED' && onResume && (
+              {/* Vista de Detalle del Paso (Sólo lectura: sin edición, sin eliminar, sin desviar, sin ejecutar) */}
+              <div className="flex-1 w-full min-w-0">
+                <StepDetailView
+                  step={selectedStep}
+                  stepNumber={stepNumber}
+                  totalSteps={steps.length}
+                  inputsMap={inputsMap}
+                  isExecutable={false}
+                  canEditDefinition={false}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-3 border-t border-gray-200 flex items-center justify-between bg-white shrink-0">
+          <div className="text-xs text-gray-500">
+            Vista de sólo lectura del procedimiento y sus resultados registrados.
+          </div>
+
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => onResume(execution.id)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs cursor-pointer flex items-center gap-1.5"
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg cursor-pointer transition-colors"
             >
-              <span>▶</span> Reanudar Ejecución
+              Cerrar
             </button>
-          )}
+
+            {execution.state === 'PAUSED' && onResume && (
+              <button
+                type="button"
+                onClick={() => onResume(execution.id)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs cursor-pointer flex items-center gap-1.5 transition-colors"
+              >
+                <PlaySquare className="w-3.5 h-3.5" /> Reanudar Ejecución
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

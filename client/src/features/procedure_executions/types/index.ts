@@ -39,7 +39,10 @@ export interface InputWithCorrections extends Input {
 export interface ExecutionWithDetails extends Execution {
   procedureName: string;
   developerName: string;
+  leaderName?: string;
   evaluatorName?: string;
+  lastSubmittedAt?: string | null;
+  lastEvaluatedAt?: string | null;
   inputs: InputWithCorrections[];
   evaluations?: Evaluation[];
 }

@@ -99,6 +99,11 @@ export const getExecutionDetails = async (executionId: number): Promise<Executio
   const users = storage.getUsers();
   const dev = users.find((u) => String(u.id) === String(exec.idDeveloper));
 
+  // Buscar líder del proyecto / aprobador
+  const projects = storage.getProjects();
+  const proj = projects.find((p) => String(p.id) === String(exec.idProject));
+  const leader = users.find((u) => u.role === 'LIDER');
+
   const inputs = storage.getInputsByExecution(executionId);
   const corrections = storage.getCorrections();
 
@@ -109,10 +114,28 @@ export const getExecutionDetails = async (executionId: number): Promise<Executio
 
   const evaluations = storage.getEvaluations().filter((e) => e.idExecution === executionId);
 
+  // Determinar última fecha de envío (último input o startedAt / endedAt)
+  const lastInput = inputs.length > 0
+    ? [...inputs].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
+    : null;
+  const lastSubmittedAt = lastInput ? lastInput.createdAt : exec.startedAt;
+
+  // Determinar última fecha de evaluación
+  const lastEvaluation = evaluations.length > 0
+    ? [...evaluations].sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())[0]
+    : null;
+  const lastEvaluatedAt = lastEvaluation ? (lastEvaluation.endedAt || lastEvaluation.startedAt) : null;
+
+  const evaluatorUser = lastEvaluation ? users.find((u) => String(u.id) === String(lastEvaluation.idEvaluator)) : null;
+
   return {
     ...exec,
     procedureName: proc?.name || `Procedimiento #${exec.idProcedure}`,
     developerName: dev?.name || 'Desarrollador',
+    leaderName: leader?.name || 'Líder del Proyecto',
+    evaluatorName: evaluatorUser?.name || leader?.name,
+    lastSubmittedAt,
+    lastEvaluatedAt,
     inputs: inputsWithCorrections,
     evaluations,
   };

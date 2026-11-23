@@ -173,6 +173,10 @@ export const LeaderDashboard = ({
           ? 'Gestión de Ejecuciones'
           : 'Biblioteca de Procedimientos Estándar';
 
+  const pendingExecutionsCount = executions.filter(
+    (e) => e.state === 'HAS_CORRECTIONS' || e.state === 'PAUSED'
+  ).length;
+
   const sidebarItems: SidebarNavItem<LeaderTab>[] = [
     {
       id: 'PROJECTS',
@@ -188,6 +192,7 @@ export const LeaderDashboard = ({
       id: 'EXECUTIONS',
       label: 'Ejecuciones',
       icon: <PlaySquare className="w-4 h-4" />,
+      badge: pendingExecutionsCount > 0 ? pendingExecutionsCount : undefined,
     },
     {
       id: 'PROCEDURES',
@@ -236,7 +241,7 @@ export const LeaderDashboard = ({
           </div>
         )}
 
-        <div className="flex flex-col md:flex-row gap-8 items-start w-full">
+        <div className="flex flex-col md:flex-row gap-0 items-start w-full">
           {/* Side Navbar de Líder pegado a la izquierda */}
           <SidebarNav<LeaderTab>
             items={sidebarItems}
@@ -272,8 +277,6 @@ export const LeaderDashboard = ({
                     procedures={procedures}
                     onExecuteProcedure={handleExecuteProcedure}
                     onNewProcedure={handleStartCreationAndExecution}
-                    activeSection="PROCEDURES"
-                    onSelectSection={(sec) => setActiveTab(sec as LeaderTab)}
                   />
                 </div>
               )}
@@ -288,9 +291,6 @@ export const LeaderDashboard = ({
                     onSuccessFeedback={showSuccessFeedback}
                     onCreateAndExecute={handleStartCreationAndExecution}
                     onSearchProcedures={() => setActiveTab('PROCEDURES')}
-                    activeSection="EXECUTIONS"
-                    onSelectSection={(sec) => setActiveTab(sec as LeaderTab)}
-                    hideSidebar
                   />
                 </div>
               )}

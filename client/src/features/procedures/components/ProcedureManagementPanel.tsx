@@ -6,22 +6,17 @@ import { getProcedureDetails } from '../api/proceduresApi';
 import { getExecutionDetails } from '@/features/procedure_executions/api/executionsApi';
 import type { ExecutionWithDetails } from '@/features/procedure_executions/types';
 import { storage } from '@/services/storage';
-import { ProceduresSidebarNav, ProceduresNavSection } from '@/components/ProceduresSidebarNav';
 
 interface ProcedureManagementPanelProps {
   procedures: Procedure[];
   onExecuteProcedure: (procedureId: number) => void;
   onNewProcedure: () => void;
-  activeSection?: ProceduresNavSection;
-  onSelectSection?: (section: ProceduresNavSection) => void;
 }
 
 export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> = ({
   procedures,
   onExecuteProcedure,
   onNewProcedure,
-  activeSection = 'PROCEDURES',
-  onSelectSection,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [tagSearchInput, setTagSearchInput] = useState('');
@@ -142,23 +137,9 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
   }, [procedures, searchTerm, detailScope, allSteps, selectedTags]);
 
   return (
-    <div className="flex flex-col md:flex-row gap-8 items-start w-full">
-      {/* Sidebar Nav Reusable pegado a la izquierda */}
-      <ProceduresSidebarNav
-        activeSection={activeSection}
-        onSelectSection={(section) => {
-          if (onSelectSection) {
-            onSelectSection(section);
-          }
-        }}
-        onCreateProcedure={onNewProcedure}
-      />
-
-      {/* Contenido Principal de Gestión de Procedimientos - Centrado */}
-      <div className="flex-1 w-full min-w-0 flex justify-center">
-        <div className="w-full max-w-5xl space-y-6">
-          {/* Header and Quick Actions */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="w-full max-w-5xl space-y-6">
+      {/* Header and Quick Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h2 className="text-xl font-bold text-gray-900 tracking-tight">
                 Gestión de Procedimientos
@@ -392,8 +373,6 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
             }}
           />
         )}
-        </div>
-      </div>
     </div>
   );
 };

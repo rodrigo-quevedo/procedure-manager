@@ -18,6 +18,8 @@ import {
   type ExecutionListItem,
 } from '@/features/procedure_executions';
 import { NavbarHeader } from '@/components/NavbarHeader';
+import { SidebarNav, SidebarNavItem } from '@/components/SidebarNav';
+import { PlaySquare, BookOpen, Plus } from 'lucide-react';
 
 interface DeveloperDashboardProps {
   user: User;
@@ -163,6 +165,24 @@ export const DeveloperDashboard = ({
   const pageTitle =
     activeTab === 'EXECUTIONS' ? 'Gestión de Ejecuciones' : 'Biblioteca de Procedimientos Estándar';
 
+  const pendingExecutionsCount = executions.filter(
+    (e) => e.state === 'HAS_CORRECTIONS' || e.state === 'PAUSED'
+  ).length;
+
+  const sidebarItems: SidebarNavItem<DeveloperTab>[] = [
+    {
+      id: 'EXECUTIONS',
+      label: 'Ejecuciones',
+      icon: <PlaySquare className="w-4 h-4" />,
+      badge: pendingExecutionsCount > 0 ? pendingExecutionsCount : undefined,
+    },
+    {
+      id: 'PROCEDURES',
+      label: 'Procedimientos Estándar',
+      icon: <BookOpen className="w-4 h-4" />,
+    },
+  ];
+
   return (
     <div className="min-h-screen flex flex-col font-sans bg-gray-50/50">
       <NavbarHeader
@@ -182,30 +202,49 @@ export const DeveloperDashboard = ({
           </div>
         )}
 
-        {/* Procedures Management Tab (HU-008 & Entry to HU-007 / HU-009) */}
-        {activeTab === 'PROCEDURES' && (
-          <ProcedureManagementPanel
-            procedures={procedures}
-            onExecuteProcedure={handleExecuteProcedure}
-            onNewProcedure={handleStartCreationAndExecution}
-            activeSection="PROCEDURES"
-            onSelectSection={(sec) => setActiveTab(sec)}
+        <div className="flex flex-col md:flex-row gap-5 items-start w-full">
+          {/* Side Navbar de Desarrollador pegado a la izquierda */}
+          <SidebarNav<DeveloperTab>
+            items={sidebarItems}
+            activeId={activeTab}
+            onSelect={(tab) => setActiveTab(tab)}
+            actionButton={{
+              label: 'Crear Procedimiento',
+              icon: <Plus className="w-3.5 h-3.5 stroke-[2.5]" />,
+              onClick: handleStartCreationAndExecution,
+            }}
           />
-        )}
 
-        {/* Executions Management Tab (HU-011) */}
-        {activeTab === 'EXECUTIONS' && (
-          <ExecutionManagementPanel
-            executions={executions}
-            onRefresh={loadAllData}
-            onResumeExecution={handleResumeExecution}
-            onSuccessFeedback={showSuccessFeedback}
-            onCreateAndExecute={handleStartCreationAndExecution}
-            onSearchProcedures={() => setActiveTab('PROCEDURES')}
-            activeSection="EXECUTIONS"
-            onSelectSection={(sec) => setActiveTab(sec)}
-          />
-        )}
+          {/* Contenido centrado */}
+          <div className="flex-1 w-full min-w-0 flex justify-center">
+            <div className="w-full max-w-5xl space-y-6">
+              {/* Executions Management Tab (HU-011) */}
+              {activeTab === 'EXECUTIONS' && (
+                <div className="w-full">
+                  <ExecutionManagementPanel
+                    executions={executions}
+                    onRefresh={loadAllData}
+                    onResumeExecution={handleResumeExecution}
+                    onSuccessFeedback={showSuccessFeedback}
+                    onCreateAndExecute={handleStartCreationAndExecution}
+                    onSearchProcedures={() => setActiveTab('PROCEDURES')}
+                  />
+                </div>
+              )}
+
+              {/* Procedures Management Tab (HU-008 & Entry to HU-007 / HU-009) */}
+              {activeTab === 'PROCEDURES' && (
+                <div className="w-full">
+                  <ProcedureManagementPanel
+                    procedures={procedures}
+                    onExecuteProcedure={handleExecuteProcedure}
+                    onNewProcedure={handleStartCreationAndExecution}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   );

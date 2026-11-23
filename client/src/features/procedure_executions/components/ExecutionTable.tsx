@@ -1,5 +1,8 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useState } from 'react';
 import type { ExecutionListItem } from '../api/executionsApi';
+import { getExecutionDetails } from '../api/executionsApi';
+import type { ExecutionWithDetails } from '../types';
+import { ExecutionDetailModal } from './ExecutionDetailModal';
 
 export interface ColumnDef<T = ExecutionListItem> {
   key: string;
@@ -37,6 +40,19 @@ export const ExecutionTable: React.FC<ExecutionTableProps> = ({
   headerClassName = 'bg-gray-50/80 border-b border-gray-200',
   headerTextClassName = 'text-gray-600',
 }) => {
+  const [selectedExecutionDetails, setSelectedExecutionDetails] = useState<ExecutionWithDetails | null>(null);
+
+  const handleRowClick = async (execution: ExecutionListItem) => {
+    if (onRowClick) {
+      onRowClick(execution);
+    } else {
+      const details = await getExecutionDetails(execution.id);
+      if (details) {
+        setSelectedExecutionDetails(details);
+      }
+    }
+  };
+
   if (data.length === 0) {
     return (
       <div className={emptyClassName}>
@@ -65,7 +81,8 @@ export const ExecutionTable: React.FC<ExecutionTableProps> = ({
   const hoverColorClass = hoverColorMap[procedureHoverColor] ?? 'hover:text-red-700';
 
   return (
-    <table className="w-full text-left text-sm text-gray-600">
+    <>
+      <table className="w-full text-left text-sm text-gray-600">
       <thead className={`${headerClassName} text-[12px] font-semibold ${headerTextClassName} uppercase tracking-wider`}>
         <tr>
           {effectiveColumns.map((col) => (
@@ -85,7 +102,7 @@ export const ExecutionTable: React.FC<ExecutionTableProps> = ({
           <tr
             key={execution.id}
             className={`${rowHoverClassName} transition cursor-pointer`}
-            onClick={() => onRowClick?.(execution)}
+            onClick={() => handleRowClick(execution)}
           >
             {effectiveColumns.map((col) => {
               if (col.render) {
@@ -155,5 +172,13 @@ export const ExecutionTable: React.FC<ExecutionTableProps> = ({
         ))}
       </tbody>
     </table>
+
+    {selectedExecutionDetails && (
+      <ExecutionDetailModal
+        execution={selectedExecutionDetails}
+        onClose={() => setSelectedExecutionDetails(null)}
+      />
+    )}
+  </>
   );
 };

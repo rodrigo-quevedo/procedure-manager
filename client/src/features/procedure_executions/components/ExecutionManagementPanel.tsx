@@ -5,7 +5,6 @@ import type { ExecutionWithDetails } from '../types';
 import { ExecutionDetailModal } from './ExecutionDetailModal';
 import { getExecutionDetails, updateExecutionState } from '../api/executionsApi';
 import { ExecutionTable, ColumnDef } from './ExecutionTable';
-import { ProceduresSidebarNav, ProceduresNavSection } from '@/components/ProceduresSidebarNav';
 import {
   Play,
   Pause,
@@ -26,9 +25,6 @@ interface ExecutionManagementPanelProps {
   onSuccessFeedback?: (message: string) => void;
   onCreateAndExecute?: () => void;
   onSearchProcedures?: () => void;
-  activeSection?: ProceduresNavSection;
-  onSelectSection?: (section: ProceduresNavSection) => void;
-  hideSidebar?: boolean;
 }
 
 export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> = ({
@@ -38,9 +34,6 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
   onSuccessFeedback,
   onCreateAndExecute,
   onSearchProcedures,
-  activeSection = 'EXECUTIONS',
-  onSelectSection,
-  hideSidebar = false,
 }) => {
   // Tabs sin 'ACTIVE'
   const [activeTab, setActiveTab] = useState<Exclude<ExecutionState, 'ACTIVE'> | 'ALL'>('ALL');
@@ -271,7 +264,15 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
   ];
 
   const panelContent = (
-    <div className="w-full max-w-5xl space-y-6">
+    <div className="w-full max-w-8xl space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+          Ejecuciones en curso
+        </h2>
+        <p className="text-xs text-gray-500 mt-1">
+          Aquí puedes gestionar y monitorear todas las ejecuciones de procedimientos que se encuentran activas en tu organización.
+        </p>
+      </div>
       {/* Seccion 1 */}
       <div className="rounded-lg bg-rose-50 border border-rose-200/80 p-5 shadow-sm transition-all duration-300 hover:shadow-md space-y-4">
         <div>
@@ -279,7 +280,7 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
             <div className="flex items-center gap-3">
               <h2 className="cursor-default text-base font-bold text-gray-900 tracking-wide flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-red-600 transition-transform duration-200 group-hover:scale-105" />
-                Corregir
+                Pendientes de Corrección
               </h2>
               <span className="inline-flex items-center justify-center min-w-5 h-5 px-2 text-xs font-semibold rounded-full bg-red-600 text-white shadow-2xs">
                 {correctionExecutions.length}
@@ -313,7 +314,7 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
             <div className="flex items-center gap-3">
               <h2 className="cursor-default text-base font-bold text-gray-900 tracking-wide flex items-center gap-2">
                 <Pause className="w-5 h-5 text-black transition-transform duration-200 group-hover:scale-105" />
-                Pausados
+                En Pausa
               </h2>
               {/* Badge con cantidad en negro puro */}
               <span className="inline-flex items-center justify-center min-w-5 h-5 px-2 text-xs font-semibold rounded-full bg-black text-white shadow-2xs">
@@ -493,31 +494,9 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
     </div>
   );
 
-  if (hideSidebar) {
-    return (
-      <div className="w-full flex justify-center">
-        {panelContent}
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col md:flex-row gap-8 items-start w-full">
-      {/* Sidebar Nav Reusable pegado a la izquierda */}
-      <ProceduresSidebarNav
-        activeSection={activeSection}
-        onSelectSection={(section) => {
-          if (onSelectSection) {
-            onSelectSection(section);
-          }
-        }}
-        onCreateProcedure={onCreateAndExecute}
-      />
-
-      {/* Contenido Principal de Ejecuciones - Centrado */}
-      <div className="flex-1 w-full min-w-0 flex justify-center">
-        {panelContent}
-      </div>
+    <div className="w-full flex justify-center">
+      {panelContent}
     </div>
   );
 };

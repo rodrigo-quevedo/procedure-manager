@@ -168,7 +168,7 @@ export const OrganizationDashboard = ({
           </div>
         )}
 
-        <div className="flex flex-col md:flex-row gap-8 items-start w-full">
+        <div className="flex flex-col md:flex-row gap-0 items-start w-full">
           {/* Side Navbar de Organización pegado a la izquierda */}
           <SidebarNav<TabType>
             items={sidebarItems}
@@ -177,14 +177,14 @@ export const OrganizationDashboard = ({
             actionButton={
               activeTab === 'PROJECTS'
                 ? {
-                    label: 'Crear Proyecto',
-                    icon: <Plus className="w-3.5 h-3.5 stroke-[2.5]" />,
-                    onClick: () => {
-                      setProjectCreateTrigger((prev) => prev + 1);
-                    },
-                  }
+                  label: 'Crear Proyecto',
+                  icon: <Plus className="w-3.5 h-3.5 stroke-[2.5]" />,
+                  onClick: () => {
+                    setProjectCreateTrigger((prev) => prev + 1);
+                  },
+                }
                 : activeTab === 'MEMBERS'
-                ? {
+                  ? {
                     label: 'Nuevo Miembro',
                     icon: <Plus className="w-3.5 h-3.5 stroke-[2.5]" />,
                     onClick: () => {
@@ -192,7 +192,7 @@ export const OrganizationDashboard = ({
                       setIsCreatingMember(true);
                     },
                   }
-                : undefined
+                  : undefined
             }
           />
 

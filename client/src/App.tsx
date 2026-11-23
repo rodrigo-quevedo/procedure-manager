@@ -79,7 +79,7 @@ export function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <>
       {currentAuthView === 'register' ? (
         <RegisterForm
           onSuccess={handleAuthSuccess}
@@ -91,7 +91,7 @@ export function App() {
           onNavigateToRegister={() => setCurrentAuthView('register')}
         />
       )}
-    </div>
+    </>
   );
 
   // return <ExecutionManagementMock />;
