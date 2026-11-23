@@ -665,6 +665,28 @@ const EvaluationDetailView: React.FC<EvaluationDetailViewProps> = ({ onBack }) =
                         </div>
                     </div>
                 </div>
+
+                {/* Botones de Acción al final del Sidebar */}
+                <div className="pt-6 mt-6 border-t border-gray-200 space-y-2.5">
+                    <button
+                        type="button"
+                        className="w-full py-2.5 px-4 text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                    >
+                        Guardar
+                    </button>
+                    <button
+                        type="button"
+                        className="w-full py-2.5 px-4 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                    >
+                        Enviar
+                    </button>
+                    <button
+                        type="button"
+                        className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs transition-colors cursor-pointer"
+                    >
+                        Aprobar
+                    </button>
+                </div>
             </aside>
 
             {/* Main Content */}
