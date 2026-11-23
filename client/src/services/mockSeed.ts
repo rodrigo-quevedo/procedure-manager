@@ -9,6 +9,8 @@ import type {
 } from '@shared/types';
 
 export function initializeProcedureMocks(organizationId: string, developerId: number, projectId: number) {
+  void organizationId;
+  void projectId;
   const existingProcedures = storage.getProcedures();
   if (existingProcedures.length > 0) return;
 

@@ -43,7 +43,7 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
   // Modal Detail state (HU-008 CA 3, 4, 5)
   const [selectedProcedureDetails, setSelectedProcedureDetails] = useState<ProcedureWithDetails | null>(null);
   const [procedureExecutions, setProcedureExecutions] = useState<Execution[]>([]);
-  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [, setIsLoadingDetails] = useState(false);
 
   const toggleScope = (key: keyof typeof detailScope) => {
     setDetailScope((prev) => ({

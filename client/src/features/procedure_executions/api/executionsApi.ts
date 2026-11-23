@@ -4,8 +4,6 @@ import type {
   Input,
   ExecutionState,
   FieldType,
-  Evaluation,
-  Correction,
 } from '@shared/types';
 import type { ExecutionWithDetails, InputWithCorrections } from '../types';
 
@@ -38,11 +36,13 @@ export const getExecutions = async (developerId?: number): Promise<ExecutionList
   const projects = storage.getProjects();
   const users = storage.getUsers();
   const inputs = storage.getInputs();
+  void inputs;
   const steps = storage.getSteps();
 
   return filtered.map((exec) => {
     const proc = procedures.find((p) => p.id === exec.idProcedure);
     const proj = projects.find((p) => String(p.id) === String(exec.idProject));
+  void proj;
     const dev = users.find((u) => String(u.id) === String(exec.idDeveloper));
 
     const procSteps = steps.filter((s) => s.idProcedure === exec.idProcedure);
@@ -102,6 +102,7 @@ export const getExecutionDetails = async (executionId: number): Promise<Executio
   // Buscar líder del proyecto / aprobador
   const projects = storage.getProjects();
   const proj = projects.find((p) => String(p.id) === String(exec.idProject));
+  void proj;
   const leader = users.find((u) => u.role === 'LIDER');
 
   const inputs = storage.getInputsByExecution(executionId);

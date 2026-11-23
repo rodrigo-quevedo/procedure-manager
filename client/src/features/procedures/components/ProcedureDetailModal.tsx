@@ -12,7 +12,7 @@ import {
   AlertCircle,
   XCircle,
   Percent,
-  FolderKanban,
+
   User,
   Tags,
 } from 'lucide-react';

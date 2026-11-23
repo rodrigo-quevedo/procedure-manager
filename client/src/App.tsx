@@ -5,7 +5,6 @@ import { OrganizationDashboard } from '@/components/dashboards/OrganizationDashb
 import { DeveloperDashboard } from '@/components/dashboards/DeveloperDashboard';
 import { LeaderDashboard } from '@/components/dashboards/LeaderDashboard';
 import { storage } from '@/services/storage';
-import ExecutionManagementMock from './examples/ExecutionManagement';
 
 type AuthView = 'register' | 'login';
 

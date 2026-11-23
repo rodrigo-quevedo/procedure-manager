@@ -12,10 +12,6 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
-  Eye,
-  Calendar,
-  Plus,
-  Search,
 } from 'lucide-react';
 
 interface ExecutionManagementPanelProps {
@@ -35,6 +31,8 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
   onCreateAndExecute,
   onSearchProcedures,
 }) => {
+  void onCreateAndExecute;
+  void onSearchProcedures;
   // Tabs sin 'ACTIVE'
   const [activeTab, setActiveTab] = useState<Exclude<ExecutionState, 'ACTIVE'> | 'ALL'>('ALL');
   const [selectedExecutionDetails, setSelectedExecutionDetails] = useState<ExecutionWithDetails | null>(null);
@@ -59,6 +57,7 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
   // Total de ejecuciones en proceso: Pausadas + Con corrección + Evaluación pendiente
   const totalInProcessCount =
     pausedExecutions.length + correctionExecutions.length + pendingEvaluationExecutions.length;
+  void totalInProcessCount;
 
   const handleOpenDetails = async (executionId: number) => {
     const details = await getExecutionDetails(executionId);
