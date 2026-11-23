@@ -1,22 +1,21 @@
 import { useState, type FormEvent } from 'react';
 import { createMember } from '../api/createMember';
-import type { MemberRole } from '../types';
+import type { MemberRoleCode } from '@pm/shared';
 
 interface MemberFormProps {
-  organizationId: string;
+  organizationId?: string | number;
   onSuccess: () => void;
   onCancel?: () => void;
 }
 
 export const MemberForm = ({
-  organizationId,
   onSuccess,
   onCancel,
 }: MemberFormProps) => {
-  const [name, setName] = useState('');
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<MemberRole>('DESARROLLADOR');
+  const [role, setRole] = useState<MemberRoleCode>('DEVELOPER');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -27,7 +26,7 @@ export const MemberForm = ({
     setSuccessMessage(null);
 
     // Front-end early validation for mandatory fields
-    if (!name.trim()) {
+    if (!fullName.trim()) {
       setError('Por favor, ingresa el nombre completo del miembro.');
       return;
     }
@@ -50,18 +49,18 @@ export const MemberForm = ({
     setIsLoading(true);
 
     try {
-      await createMember(organizationId, {
-        name,
-        email,
+      await createMember({
+        fullName: fullName.trim(),
+        email: email.trim(),
         password,
         role,
       });
 
       setSuccessMessage('¡Miembro registrado exitosamente!');
-      setName('');
+      setFullName('');
       setEmail('');
       setPassword('');
-      setRole('DESARROLLADOR');
+      setRole('DEVELOPER');
       onSuccess();
     } catch (err) {
       if (err instanceof Error) {
@@ -124,16 +123,16 @@ export const MemberForm = ({
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <div>
           <label
-            htmlFor="memberName"
+            htmlFor="memberFullName"
             className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1"
           >
             Nombre Completo
           </label>
           <input
-            id="memberName"
+            id="memberFullName"
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
             placeholder="Ej. Juan Pérez"
             className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-md shadow-xs focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-colors"
           />
@@ -186,11 +185,11 @@ export const MemberForm = ({
           <select
             id="memberRole"
             value={role}
-            onChange={(e) => setRole(e.target.value as MemberRole)}
+            onChange={(e) => setRole(e.target.value as MemberRoleCode)}
             className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-md shadow-xs focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-colors cursor-pointer"
           >
-            <option value="DESARROLLADOR">Desarrollador</option>
-            <option value="LIDER">Líder</option>
+            <option value="DEVELOPER">Desarrollador</option>
+            <option value="LEADER">Líder</option>
           </select>
         </div>
 
@@ -217,4 +216,3 @@ export const MemberForm = ({
     </div>
   );
 };
-

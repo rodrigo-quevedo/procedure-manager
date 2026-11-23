@@ -1,65 +1,31 @@
-import { storage } from '@/services/storage';
-import type { AuthSession, LoginDTO, User } from '../types';
+import type { LoginCredentialsDTO, AuthTokenResponse, AuthSession } from '@pm/shared';
 
-export const loginUser = async (data: LoginDTO): Promise<AuthSession> => {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
 
-  const trimmedEmail = data.email?.trim().toLowerCase() ?? '';
-  const password = data.password ?? '';
+/**
+ * HU-002 – Calls the backend login endpoint and maps the
+ * AuthTokenResponse to the client-side AuthSession shape.
+ */
+export const loginUser = async (data: LoginCredentialsDTO): Promise<AuthSession> => {
+  const res = await fetch(`${API_BASE}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
 
-  if (!trimmedEmail) {
-    throw new Error('El correo electrónico es obligatorio.');
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({})) as { message?: string };
+    throw new Error(body.message ?? 'Error al iniciar sesión.');
   }
 
-  if (!password) {
-    throw new Error('La contraseña es obligatoria.');
-  }
+  const payload: AuthTokenResponse = await res.json();
 
-  const user = storage.findUserByEmail(trimmedEmail);
-
-  // If user not found, return generic error (no lockout tracking)
-  if (!user) {
-    throw new Error('Credenciales inválidas. Verifica tu correo y contraseña.');
-  }
-
-  // Check if account is inactive / inhabilitada
-  if (!user.isActive) {
-    throw new Error('La cuenta está inhabilitada. Contacta al administrador.');
-  }
-
-  if (user.password !== password) {
-    // Increment failed attempts
-    const attempts = (user.failedLoginAttempts ?? 0) + 1;
-    const shouldDeactivate = attempts >= 5;
-    const updatedUser: User = {
-      ...user,
-      failedLoginAttempts: attempts,
-      isActive: shouldDeactivate ? false : true,
-    };
-    storage.saveUser(updatedUser);
-
-    if (shouldDeactivate) {
-      throw new Error('Demasiados intentos fallidos. La cuenta ha sido desactivada.');
-    }
-    throw new Error('Credenciales inválidas. Verifica tu correo y contraseña.');
-  }
-
-  // Successful login: reset counters and ensure active
-  const updatedUser: User = {
-    ...user,
-    failedLoginAttempts: 0,
-    isActive: true,
+  const session: AuthSession = {
+    user: payload.user,
+    token: payload.accessToken,
+    refreshToken: payload.refreshToken,
+    expiresAt: Date.now() + payload.expiresIn * 1000,
   };
-  storage.saveUser(updatedUser);
 
-  const organization = storage.getOrganizationById(user.organizationId);
-
-  storage.setCurrentUser(updatedUser);
-  storage.setCurrentOrganization(organization);
-
-  return {
-    user: updatedUser,
-    organization: organization!,
-  };
+  return session;
 };

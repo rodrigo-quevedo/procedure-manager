@@ -1,41 +1,29 @@
 /**
  * Member types for the client.
  *
- * Re-exports shared backend types and adds client-only DTOs
- * needed by the localStorage mock layer.
- *
- * MIGRATION NOTE: `MemberRole` uses the Spanish-coded values ('LIDER',
- * 'DESARROLLADOR') that the localStorage mock relies on. The shared `RoleCode`
- * ('LEADER', 'DEVELOPER') is the real backend contract and should be used
- * once the REST API is integrated.
+ * Uses the shared backend types directly.
+ * The old localStorage mock types (MemberRole with Spanish codes, string IDs)
+ * have been replaced by the real backend contract.
  */
 
-// -- Shared re-exports ------------------------------------------------------
-export type { RoleCode } from '@shared/types';
-export { ROLE_LABELS } from '@shared/types';
+// -- Shared re-exports (backend contract) -----------------------------------
+export type {
+    RoleCode,
+    MemberRoleCode,
+    CreateMemberDTO,
+    UpdateMemberDTO,
+    MemberResponse,
+} from '@pm/shared';
 
-// -- Client-only types ------------------------------------------------------
+export { ROLE_LABELS } from '@pm/shared';
 
-import type { ClientRoleCode } from '@/features/auth/types';
+// -- Backward-compat aliases ------------------------------------------------
+// Keep ClientRoleCode so other parts of the codebase that haven't migrated yet
+// (e.g. ProjectsPanel, storage service) continue to compile.
+export type { ClientRoleCode } from '@/features/auth/types';
 
 /**
- * Roles assignable to members within the client (excludes ORGANIZACION).
+ * @deprecated Use MemberRoleCode from @pm/shared instead.
+ * Kept only for components that haven't migrated away from Spanish role codes.
  */
-export type MemberRole = Exclude<ClientRoleCode, 'ORGANIZACION'>;
-
-/** DTO for creating a new member from the client form. */
-export interface CreateMemberDTO {
-  name: string;
-  email: string;
-  password: string;
-  role: MemberRole;
-}
-
-/** DTO for updating an existing member. */
-export interface UpdateMemberDTO {
-  id: string;
-  name: string;
-  email: string;
-  password?: string;
-  role: MemberRole;
-}
+export type MemberRole = import('@pm/shared').MemberRoleCode;

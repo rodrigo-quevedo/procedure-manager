@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import type { User } from '@/features/auth/types';
+import type { MemberResponse, MemberRoleCode } from '@pm/shared';
+import { ROLE_LABELS } from '@pm/shared';
 
 interface MemberListProps {
-  members: User[];
-  onSelectMember: (member: User) => void;
-  onToggleStatus: (member: User) => void;
+  members: MemberResponse[];
+  onSelectMember: (member: MemberResponse) => void;
+  onToggleStatus: (member: MemberResponse) => void;
   isLoading?: boolean;
 }
 
@@ -25,9 +26,9 @@ export const MemberList = ({
     // Search filter
     if (search.trim()) {
       const q = search.toLowerCase();
-      const matchName = member.name.toLowerCase().includes(q);
+      const matchName = member.fullName.toLowerCase().includes(q);
       const matchEmail = member.email.toLowerCase().includes(q);
-      const matchRole = member.role.toLowerCase().includes(q);
+      const matchRole = (ROLE_LABELS[member.role] || member.role).toLowerCase().includes(q);
       return matchName || matchEmail || matchRole;
     }
     return true;
@@ -133,11 +134,11 @@ export const MemberList = ({
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-red-100 text-red-700 flex items-center justify-center font-bold text-xs">
-                        {member.name.charAt(0).toUpperCase()}
+                        {member.fullName.charAt(0).toUpperCase()}
                       </div>
                       <div>
                         <span className="font-semibold text-gray-900 block hover:text-red-600 transition-colors">
-                          {member.name}
+                          {member.fullName}
                         </span>
                         <span className="text-xs text-gray-400">
                           {member.email}
@@ -151,7 +152,7 @@ export const MemberList = ({
                     className="px-6 py-4 cursor-pointer"
                   >
                     <span className="inline-block text-xs font-medium text-gray-700 bg-gray-100 px-2.5 py-0.5 rounded">
-                      {member.role === 'LIDER' ? 'Líder' : 'Desarrollador'}
+                      {ROLE_LABELS[member.role as MemberRoleCode] || member.role}
                     </span>
                   </td>
 
@@ -208,4 +209,3 @@ export const MemberList = ({
     </div>
   );
 };
-

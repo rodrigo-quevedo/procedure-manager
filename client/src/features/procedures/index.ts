@@ -6,4 +6,5 @@ export * from './components/StepDetailView';
 export * from './components/StepNavigation';
 export * from './components/CreationAndExecutionView';
 export * from './components/ProcedureDetailModal';
+export * from './components/CreateProcedureModal';
 export * from './components/ProcedureManagementPanel';

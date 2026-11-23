@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { User } from '@/features/auth/types';
+import type { MemberResponse } from '@pm/shared';
 import { getMembers } from '@/features/members';
 import { getProjects } from '../api/getProjects';
 import type { ClientProject as Project } from '../types';
@@ -8,8 +8,8 @@ import { ProjectForm } from './ProjectForm';
 import { ProjectList } from './ProjectList';
 
 interface ProjectsPanelProps {
-  organizationId: string;
-  actor: User;
+  organizationId?: string | number;
+  actor: { id: number; role: string; fullName?: string; name?: string; email: string };
   onSuccess: (message: string) => void;
   createTrigger?: number;
 }
@@ -19,7 +19,7 @@ type PanelView = 'list' | 'create' | 'detail';
 export function ProjectsPanel({ organizationId, actor, onSuccess, createTrigger }: ProjectsPanelProps) {
   const [view, setView] = useState<PanelView>('list');
   const [projects, setProjects] = useState<Project[]>([]);
-  const [members, setMembers] = useState<User[]>([]);
+  const [members, setMembers] = useState<MemberResponse[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -34,19 +34,23 @@ export function ProjectsPanel({ organizationId, actor, onSuccess, createTrigger 
     setIsLoading(true);
     try {
       const [projectData, memberData] = await Promise.all([
-        getProjects(organizationId, actor),
-        getMembers(organizationId),
+        getProjects(organizationId),
+        getMembers(),
       ]);
       setProjects(projectData);
       setMembers(memberData);
+    } catch (err) {
+      console.error('Error al cargar datos de proyectos:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [organizationId, actor]);
+  }, [organizationId]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const isOrg = actor.role === 'ORGANIZATION' || actor.role === 'ORGANIZACION';
 
   return (
     <div className="space-y-6">
@@ -84,7 +88,7 @@ export function ProjectsPanel({ organizationId, actor, onSuccess, createTrigger 
             <div>
               <h2 className="text-xl font-bold text-gray-900">Proyectos</h2>
               <p className="text-xs text-gray-500 mt-0.5">
-                {actor.role === 'ORGANIZACION'
+                {isOrg
                   ? 'Listado de todos los proyectos de la organización.'
                   : 'Listado de los proyectos en los que estás asignado.'}
               </p>

@@ -1,4 +1,4 @@
-import type { User } from '@/features/auth/types';
+import type { MemberResponse } from '@pm/shared';
 import type { ClientProject } from '../types';
 
 function normalizeText(value: string): string {
@@ -46,7 +46,7 @@ function fieldMatchesToken(token: string, field: string): boolean {
 
 export function projectMatchesQuery(
   project: ClientProject,
-  participants: User[],
+  participants: MemberResponse[],
   query: string,
 ): boolean {
   const normalizedQuery = normalizeText(query);
@@ -55,13 +55,13 @@ export function projectMatchesQuery(
   const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
   const fields = [
     project.name,
-    ...participants.flatMap((person) => [person.name, person.email]),
+    ...participants.flatMap((person) => [person.fullName, person.email]),
   ];
 
   return tokens.every((token) => fields.some((field) => fieldMatchesToken(token, field)));
 }
 
-export function projectParticipants(project: ClientProject, directory: User[]): User[] {
+export function projectParticipants(project: ClientProject, directory: MemberResponse[]): MemberResponse[] {
   const assignedIds = new Set([...project.leaderIds, ...project.memberIds]);
   return directory.filter((person) => assignedIds.has(person.id));
 }

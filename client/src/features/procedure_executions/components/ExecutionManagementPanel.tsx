@@ -28,11 +28,7 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
   onRefresh,
   onResumeExecution,
   onSuccessFeedback,
-  onCreateAndExecute,
-  onSearchProcedures,
 }) => {
-  void onCreateAndExecute;
-  void onSearchProcedures;
   // Tabs sin 'ACTIVE'
   const [activeTab, setActiveTab] = useState<Exclude<ExecutionState, 'ACTIVE'> | 'ALL'>('ALL');
   const [selectedExecutionDetails, setSelectedExecutionDetails] = useState<ExecutionWithDetails | null>(null);
@@ -53,11 +49,6 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
   const approvedExecutions = executions.filter((item) => item.state === 'APPROVED_FINISHED');
   const cancelledExecutions = executions.filter((item) => item.state === 'CANCELLED');
   const totalCount = executions.filter((e) => e.state !== 'ACTIVE').length;
-
-  // Total de ejecuciones en proceso: Pausadas + Con corrección + Evaluación pendiente
-  const totalInProcessCount =
-    pausedExecutions.length + correctionExecutions.length + pendingEvaluationExecutions.length;
-  void totalInProcessCount;
 
   const handleOpenDetails = async (executionId: number) => {
     const details = await getExecutionDetails(executionId);

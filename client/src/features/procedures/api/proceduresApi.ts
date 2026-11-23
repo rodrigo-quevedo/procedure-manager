@@ -1,52 +1,50 @@
-import { storage } from '@/services/storage';
-import type { Procedure, Step, Section, Field } from '@shared/types';
-import type { StepWithSections, SectionWithFields, ProcedureWithDetails } from '../types';
+import type { Procedure, Step, Section, Field } from '@pm/shared';
+import type { ProcedureWithDetails } from '../types';
+
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
+
+const getToken = (): string => {
+  const raw = localStorage.getItem('pm_auth_session');
+  if (!raw) throw new Error('Sesión no encontrada. Por favor, inicia sesión nuevamente.');
+  const session = JSON.parse(raw) as { token: string };
+  return session.token;
+};
 
 export const getProcedures = async (projectId?: number): Promise<Procedure[]> => {
-  await new Promise((r) => setTimeout(r, 150));
-  const procs = storage.getProcedures();
+  const url = new URL(`${API_BASE}/api/procedures`);
   if (projectId !== undefined) {
-    return procs.filter((p) => p.idProject === projectId);
+    url.searchParams.set('projectId', String(projectId));
   }
-  return procs;
+
+  const res = await fetch(url.toString(), {
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { message?: string };
+    throw new Error(body.message ?? 'Error al obtener procedimientos.');
+  }
+
+  return res.json();
 };
 
 export const getProcedureDetails = async (procedureId: number): Promise<ProcedureWithDetails | null> => {
-  await new Promise((r) => setTimeout(r, 150));
-  const proc = storage.getProcedureById(procedureId);
-  if (!proc) return null;
-
-  const allSteps = storage.getStepsByProcedure(procedureId);
-  const stepsWithSections: StepWithSections[] = allSteps.map((step) => {
-    const sections = storage.getSectionsByStep(step.id);
-    const sectionsWithFields: SectionWithFields[] = sections.map((sec) => {
-      const fields = storage.getFieldsBySection(sec.id);
-      return {
-        ...sec,
-        fields,
-      };
-    });
-    return {
-      ...step,
-      sections: sectionsWithFields,
-    };
+  const res = await fetch(`${API_BASE}/api/procedures/${procedureId}`, {
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
   });
 
-  const projects = storage.getProjects();
-  const project = projects.find((p) => String(p.id) === String(proc.idProject));
-  const users = storage.getUsers();
-  const creator = users.find((u) => String(u.id) === String(proc.idCreator));
-  const approver = proc.idLeaderApprover
-    ? users.find((u) => String(u.id) === String(proc.idLeaderApprover))
-    : undefined;
+  if (res.status === 404) return null;
 
-  return {
-    ...proc,
-    creatorName: creator?.name || 'Desarrollador',
-    approverName: approver?.name,
-    projectName: project?.name || `Proyecto #${proc.idProject}`,
-    steps: stepsWithSections,
-  };
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { message?: string };
+    throw new Error(body.message ?? 'Error al obtener el detalle del procedimiento.');
+  }
+
+  return res.json();
 };
 
 export interface SaveProcedureHierarchyInput {
@@ -60,94 +58,44 @@ export interface SaveProcedureHierarchyInput {
       >;
     }
   >;
-  idCreator: number;
+  idCreator?: number;
 }
 
 export const saveProcedureHierarchy = async (
   input: SaveProcedureHierarchyInput
-): Promise<Procedure> => {
-  await new Promise((r) => setTimeout(r, 200));
-
-  let procId = input.procedure.id;
-  const isNew = !procId;
-
-  if (isNew) {
-    procId = Date.now();
-  }
-
-  const procedure: Procedure = {
-    id: procId!,
-    idProject: input.procedure.idProject,
-    idCreator: input.idCreator,
-    idLeaderApprover: input.procedure.idLeaderApprover || null,
-    idPreviousVersion: input.procedure.idPreviousVersion || null,
-    state: input.procedure.state || 'DRAFT',
-    name: input.procedure.name,
-    description: input.procedure.description,
-    createdAt: input.procedure.createdAt || new Date().toISOString(),
-    tags: input.procedure.tags || ['General'],
-  };
-
-  storage.saveProcedure(procedure);
-
-  // Synchronize steps, sections and fields
-  // Clean up previous elements of this procedure
-  const existingSteps = storage.getSteps().filter((s) => s.idProcedure !== procId);
-  const existingSections = storage.getSections().filter((sec) => !input.steps.some((s) => s.id === sec.idStep));
-  const existingFields = storage.getFields().filter(
-    (f) => !input.steps.some((s) => s.sections.some((sec) => sec.id === f.idSection))
-  );
-
-  const newSteps: Step[] = [];
-  const newSections: Section[] = [];
-  const newFields: Field[] = [];
-
-  input.steps.forEach((step, sIdx) => {
-    const stepId = step.id || Date.now() + sIdx * 100;
-    newSteps.push({
-      id: stepId,
-      idProcedure: procId!,
-      name: step.name,
-      description: step.description,
-      order: sIdx + 1,
-    });
-
-    step.sections.forEach((sec, secIdx) => {
-      const secId = sec.id || Date.now() + sIdx * 100 + secIdx * 10;
-      newSections.push({
-        id: secId,
-        idStep: stepId,
-        name: sec.name,
-        description: sec.description || '',
-      });
-
-      sec.fields.forEach((field, fIdx) => {
-        const fieldId = field.id || Date.now() + sIdx * 100 + secIdx * 10 + fIdx + 1;
-        newFields.push({
-          id: fieldId,
-          idSection: secId,
-          fieldType: field.fieldType,
-          content: field.content,
-        });
-      });
-    });
+): Promise<ProcedureWithDetails> => {
+  const res = await fetch(`${API_BASE}/api/procedures`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify(input),
   });
 
-  storage.saveSteps([...existingSteps, ...newSteps]);
-  storage.saveSections([...existingSections, ...newSections]);
-  storage.saveFields([...existingFields, ...newFields]);
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { message?: string };
+    throw new Error(body.message ?? 'Error al guardar la jerarquía del procedimiento.');
+  }
 
-  return procedure;
+  return res.json();
 };
 
 export const updateProcedureState = async (
   procedureId: number,
   state: Procedure['state']
 ): Promise<void> => {
-  await new Promise((r) => setTimeout(r, 150));
-  const proc = storage.getProcedureById(procedureId);
-  if (proc) {
-    proc.state = state;
-    storage.saveProcedure(proc);
+  const res = await fetch(`${API_BASE}/api/procedures/${procedureId}/state`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify({ state }),
+  });
+
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { message?: string };
+    throw new Error(body.message ?? 'Error al actualizar el estado del procedimiento.');
   }
 };

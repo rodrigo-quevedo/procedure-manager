@@ -4,19 +4,14 @@ import {
     CheckCircle2,
     AlertCircle,
     Eye,
+    Filter,
+    Search,
     Inbox,
     User,
     Calendar,
     ChevronRight,
     Sparkles,
-    RefreshCw,
-    ArrowLeft,
-    CheckSquare,
-    MessageSquare,
-    Send,
-    FolderKanban,
-    Tags,
-    FileText,
+    RefreshCw
 } from 'lucide-react';
 
 // --- Tipos de Datos para la Gestión de Evaluaciones ---
@@ -162,627 +157,19 @@ const INITIAL_EVALUATIONS: EvaluationItem[] = [
     }
 ];
 
-// ─────────────────────────────────────────────────────────────────
-// Datos hardcodeados: Aprovisionamiento de Clúster Redis Sentinel
-// ─────────────────────────────────────────────────────────────────
-
-interface HardcodedField {
-    id: number;
-    label: string;
-    fieldType: 'TEXT' | 'IMAGE';
-    // Valor ingresado por el desarrollador (versión actual)
-    value: string;
-    // Si existe, este input tiene una corrección pendiente (en rojo)
-    correction?: {
-        // Texto de la corrección anterior enviada por el líder
-        message: string;
-        // Valor anterior (pre-corrección) a mostrar como "versión anterior"
-        previousValue: string;
-    };
-}
-
-interface HardcodedSection {
-    id: number;
-    name: string;
-    description: string;
-    fields: HardcodedField[];
-}
-
-interface HardcodedStep {
-    id: number;
-    name: string;
-    description: string;
-    isCompleted: boolean;
-    sections: HardcodedSection[];
-}
-
-const REDIS_STEPS: HardcodedStep[] = [
-    {
-        id: 1,
-        name: 'Preparación del entorno y dependencias',
-        description: 'Verificar nodos disponibles, versión de Redis y configuración de red requerida.',
-        isCompleted: true,
-        sections: [
-            {
-                id: 101,
-                name: 'Verificación de nodos',
-                description: 'Confirmar que los 3 nodos están disponibles y sin workloads activos.',
-                fields: [
-                    {
-                        id: 1001,
-                        label: 'Resultado del comando de verificación de nodos',
-                        fieldType: 'TEXT',
-                        value: 'node-01: OK\nnode-02: OK\nnode-03: OK\nAll nodes reachable via private network 10.0.1.0/24',
-                    },
-                    {
-                        id: 1002,
-                        label: 'Versión de Redis instalada',
-                        fieldType: 'TEXT',
-                        value: 'Redis 7.2.4 (stable)',
-                    },
-                ],
-            },
-            {
-                id: 102,
-                name: 'Configuración de red',
-                description: 'Registrar la configuración de puertos y firewall aplicada.',
-                fields: [
-                    {
-                        id: 1003,
-                        label: 'Reglas de firewall aplicadas',
-                        fieldType: 'TEXT',
-                        value: 'Puerto 6379 (Redis): abierto entre nodos\nPuerto 26379 (Sentinel): abierto entre nodos\nBloqueo de acceso externo confirmado',
-                        correction: {
-                            previousValue: 'Puerto 6379 abierto\nPuerto 26379 abierto',
-                            message: 'Falta especificar si el acceso externo está bloqueado. Incluir regla de denegación explícita y confirmar que el puerto 26379 está restringido al VLAN interno.',
-                        },
-                    },
-                ],
-            },
-        ],
-    },
-    {
-        id: 2,
-        name: 'Configuración de nodos Redis maestro y réplicas',
-        description: 'Aplicar archivos redis.conf a cada nodo según su rol (master/replica).',
-        isCompleted: true,
-        sections: [
-            {
-                id: 201,
-                name: 'Configuración del nodo maestro',
-                description: 'Registrar la configuración aplicada al nodo maestro.',
-                fields: [
-                    {
-                        id: 2001,
-                        label: 'Parámetros clave aplicados en redis.conf (maestro)',
-                        fieldType: 'TEXT',
-                        value: 'bind 10.0.1.11\nport 6379\nmaxmemory 4gb\nmaxmemory-policy allkeys-lru\nsave 900 1\nsave 300 10',
-                    },
-                ],
-            },
-            {
-                id: 202,
-                name: 'Configuración de réplicas',
-                description: 'Registrar la configuración de cada nodo réplica.',
-                fields: [
-                    {
-                        id: 2002,
-                        label: 'Configuración réplica node-02',
-                        fieldType: 'TEXT',
-                        value: 'replicaof 10.0.1.11 6379\nbind 10.0.1.12\nreplica-read-only yes',
-                        correction: {
-                            previousValue: 'replicaof 10.0.1.11 6379\nbind 10.0.1.12',
-                            message: 'Falta la directiva replica-read-only. Las réplicas deben tener acceso de solo lectura para evitar escrituras accidentales durante el failover.',
-                        },
-                    },
-                    {
-                        id: 2003,
-                        label: 'Configuración réplica node-03',
-                        fieldType: 'TEXT',
-                        value: 'replicaof 10.0.1.11 6379\nbind 10.0.1.13\nreplica-read-only yes',
-                    },
-                ],
-            },
-        ],
-    },
-    {
-        id: 3,
-        name: 'Configuración de Sentinel',
-        description: 'Configurar y levantar el proceso sentinel en los 3 nodos.',
-        isCompleted: true,
-        sections: [
-            {
-                id: 301,
-                name: 'Archivo sentinel.conf',
-                description: 'Registrar la configuración de Sentinel aplicada.',
-                fields: [
-                    {
-                        id: 3001,
-                        label: 'Parámetros sentinel.conf (todos los nodos)',
-                        fieldType: 'TEXT',
-                        value: 'sentinel monitor mymaster 10.0.1.11 6379 2\nsentinel down-after-milliseconds mymaster 5000\nsentinel failover-timeout mymaster 60000\nsentinel parallel-syncs mymaster 1',
-                    },
-                    {
-                        id: 3002,
-                        label: 'Estado de procesos Sentinel tras levantar',
-                        fieldType: 'TEXT',
-                        value: 'node-01 sentinel: running (PID 4821)\nnode-02 sentinel: running (PID 4903)\nnode-03 sentinel: running (PID 4977)',
-                    },
-                ],
-            },
-        ],
-    },
-    {
-        id: 4,
-        name: 'Prueba de failover y validación',
-        description: 'Simular falla del maestro y verificar promoción automática de réplica.',
-        isCompleted: true,
-        sections: [
-            {
-                id: 401,
-                name: 'Prueba de failover',
-                description: 'Registrar evidencia del failover exitoso.',
-                fields: [
-                    {
-                        id: 4001,
-                        label: 'Log de failover de Sentinel',
-                        fieldType: 'TEXT',
-                        value: '+odown master mymaster 10.0.1.11 6379 #quorum 2/2\n+failover-state-select-slave master mymaster 10.0.1.11 6379\n+selected-slave slave 10.0.1.12:6379\n+promoted-slave slave 10.0.1.12:6379\n+failover-end master mymaster 10.0.1.12 6379',
-                    },
-                    {
-                        id: 4002,
-                        label: 'Tiempo de recuperación (RTO medido)',
-                        fieldType: 'TEXT',
-                        value: 'Failover completado en 8.3 segundos. Dentro del umbral aceptable (< 15s).',
-                        correction: {
-                            previousValue: 'Failover completado en aproximadamente 10 segundos.',
-                            message: 'El tiempo reportado debe incluir la medición exacta en segundos con dos decimales, y confirmar explícitamente si está dentro del umbral definido en la política de RTO del proyecto.',
-                        },
-                    },
-                ],
-            },
-        ],
-    },
-    {
-        id: 5,
-        name: 'Documentación y cierre',
-        description: 'Registrar IPs finales del clúster, contraseña de acceso y validación de conectividad desde la aplicación.',
-        isCompleted: true,
-        sections: [
-            {
-                id: 501,
-                name: 'Resumen del clúster',
-                description: 'Datos finales del clúster para su registro en la wiki del proyecto.',
-                fields: [
-                    {
-                        id: 5001,
-                        label: 'IPs y roles finales del clúster',
-                        fieldType: 'TEXT',
-                        value: 'Maestro activo: 10.0.1.12 (fue réplica, promovido)\nRéplica 1: 10.0.1.11 (nodo original, re-integrado como réplica)\nRéplica 2: 10.0.1.13\nSentinel en: 10.0.1.11, 10.0.1.12, 10.0.1.13',
-                    },
-                    {
-                        id: 5002,
-                        label: 'Validación de conectividad desde la aplicación',
-                        fieldType: 'TEXT',
-                        value: 'Test de conexión desde backend: OK\nLatencia promedio: 1.2ms\nConexión a través de Sentinel discovery: confirmado',
-                    },
-                ],
-            },
-        ],
-    },
-];
-
-// ─────────────────────────────────────────────────────────────────
-// Componente: Vista de Detalle de Evaluación (read-only + correcciones)
-// ─────────────────────────────────────────────────────────────────
-
-interface EvaluationDetailViewProps {
-    onBack: () => void;
-}
-
-const EvaluationDetailView: React.FC<EvaluationDetailViewProps> = ({ onBack }) => {
-    const [selectedStepId, setSelectedStepId] = useState<number>(REDIS_STEPS[0].id);
-    // Mapa de texto de nueva corrección por fieldId (cuando el líder hace click en "Corregir")
-    const [correctionDraft, setCorrectionDraft] = useState<Record<number, string>>({});
-    // Track which fields have the correction box open
-    const [correctionOpen, setCorrectionOpen] = useState<Record<number, boolean>>({});
-    // Track sent corrections (simulated)
-    const [correctionSent, setCorrectionSent] = useState<Record<number, string>>({});
-
-    const selectedStep = REDIS_STEPS.find((s) => s.id === selectedStepId) || REDIS_STEPS[0];
-    const stepIndex = REDIS_STEPS.findIndex((s) => s.id === selectedStepId);
-
-    const handleOpenCorrection = (fieldId: number) => {
-        setCorrectionOpen((prev) => ({ ...prev, [fieldId]: true }));
-        setCorrectionDraft((prev) => ({ ...prev, [fieldId]: '' }));
-    };
-
-    const handleSendCorrection = (fieldId: number) => {
-        const text = (correctionDraft[fieldId] || '').trim();
-        if (!text) return;
-        setCorrectionSent((prev) => ({ ...prev, [fieldId]: text }));
-        setCorrectionOpen((prev) => ({ ...prev, [fieldId]: false }));
-    };
-
-    const renderField = (field: HardcodedField) => {
-        const hasCorrection = !!field.correction;
-        const isSent = !!correctionSent[field.id];
-        const isOpen = !!correctionOpen[field.id];
-
-        return (
-            <div
-                key={field.id}
-                className={`rounded-xl border p-4 space-y-3 ${hasCorrection
-                    ? 'border-red-300 bg-red-50/40'
-                    : 'border-gray-200 bg-white'
-                    }`}
-            >
-                {/* Label con badge "Ejecución" */}
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className="text-xs font-semibold text-gray-700">{field.label}</span>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${hasCorrection
-                        ? 'bg-red-100 text-red-700 border-red-200'
-                        : 'bg-blue-50 text-blue-700 border-blue-100'
-                        }`}>
-                        Ejecución
-                    </span>
-                </div>
-
-                {/* Si hay corrección: mostrar versión anterior */}
-                {hasCorrection && field.correction && (
-                    <div className="rounded-lg border border-gray-200 bg-white/70 px-3 py-2 space-y-1">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                            Versión anterior (antes de corrección)
-                        </p>
-                        <pre className="text-xs text-gray-500 whitespace-pre-wrap font-mono leading-relaxed">
-                            {field.correction.previousValue}
-                        </pre>
-                    </div>
-                )}
-
-                {/* Valor actual (ingresado por el desarrollador) */}
-                <div className={`rounded-lg px-3 py-2.5 ${hasCorrection
-                    ? 'bg-white border border-red-200'
-                    : 'bg-gray-50 border border-gray-200'
-                    }`}>
-                    <pre className="text-xs text-gray-800 whitespace-pre-wrap font-mono leading-relaxed">
-                        {field.value}
-                    </pre>
-                </div>
-
-                {/* Corrección del líder (en negro, como sugerencia) */}
-                {hasCorrection && field.correction && (
-                    <div className="rounded-lg border border-gray-900/20 bg-gray-900/5 px-3 py-2.5 flex gap-2 items-start">
-                        <MessageSquare className="w-3.5 h-3.5 text-gray-700 mt-0.5 shrink-0" />
-                        <div className="space-y-0.5">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                                Corrección enviada anteriormente
-                            </p>
-                            <p className="text-xs text-gray-800 leading-relaxed">
-                                {field.correction.message}
-                            </p>
-                        </div>
-                    </div>
-                )}
-
-                {/* Corrección nueva enviada por el líder en esta revisión */}
-                {isSent && (
-                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 flex gap-2 items-start">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" />
-                        <div>
-                            <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
-                                Nueva corrección enviada
-                            </p>
-                            <p className="text-xs text-emerald-800 mt-0.5">{correctionSent[field.id]}</p>
-                        </div>
-                    </div>
-                )}
-
-                {/* Botón "Corregir" solo en inputs rojos y si no fue enviada ya */}
-                {hasCorrection && !isSent && (
-                    <div className="pt-1">
-                        {!isOpen ? (
-                            <button
-                                type="button"
-                                onClick={() => handleOpenCorrection(field.id)}
-                                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors cursor-pointer"
-                            >
-                                <MessageSquare className="w-3.5 h-3.5" />
-                                Corregir
-                            </button>
-                        ) : (
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-gray-700">
-                                    Nueva sugerencia de corrección:
-                                </label>
-                                <textarea
-                                    value={correctionDraft[field.id] || ''}
-                                    onChange={(e) =>
-                                        setCorrectionDraft((prev) => ({ ...prev, [field.id]: e.target.value }))
-                                    }
-                                    rows={3}
-                                    placeholder="Escribí la nueva corrección o sugerencia para el desarrollador..."
-                                    className="w-full text-xs border border-gray-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
-                                />
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => handleSendCorrection(field.id)}
-                                        disabled={!(correctionDraft[field.id] || '').trim()}
-                                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                                    >
-                                        <Send className="w-3 h-3" />
-                                        Enviar corrección
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setCorrectionOpen((prev) => ({ ...prev, [field.id]: false }))}
-                                        className="text-xs text-gray-500 hover:text-gray-700 cursor-pointer"
-                                    >
-                                        Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
-        );
-    };
-
-    return (
-        <div className="flex h-screen bg-white text-gray-800 font-sans overflow-hidden">
-            {/* Sidebar */}
-            <aside className="w-72 border-r border-gray-200 bg-gray-50 p-4 flex flex-col justify-between overflow-y-auto shrink-0">
-                <div>
-                    {/* Header */}
-                    <div className="mb-6 flex items-center justify-between">
-                        <span className="text-sm font-bold text-red-600 tracking-wide bg-red-50 border border-red-200 px-3 py-1 rounded-md shadow-xs">
-                            Revisión de Ejecución
-                        </span>
-                        <button
-                            type="button"
-                            onClick={onBack}
-                            className="text-xs text-gray-500 hover:text-red-600 cursor-pointer flex items-center gap-1"
-                        >
-                            <ArrowLeft className="w-3 h-3" />
-                            Volver
-                        </button>
-                    </div>
-
-                    {/* Step Navigation */}
-                    <div className="mb-4">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">
-                            Pasos del procedimiento
-                        </p>
-                        <div className="space-y-1">
-                            {REDIS_STEPS.map((step, idx) => {
-                                const isSelected = step.id === selectedStepId;
-                                // ¿Tiene algún campo con corrección?
-                                const hasCorrections = step.sections.some((sec) =>
-                                    sec.fields.some((f) => !!f.correction)
-                                );
-                                return (
-                                    <button
-                                        key={step.id}
-                                        type="button"
-                                        onClick={() => setSelectedStepId(step.id)}
-                                        className={`w-full text-left px-3 py-2.5 rounded-lg flex items-center gap-2.5 transition-all cursor-pointer ${isSelected
-                                            ? 'bg-red-50 border border-red-200 shadow-xs'
-                                            : 'hover:bg-gray-100 border border-transparent'
-                                            }`}
-                                    >
-                                        <span className={`shrink-0 w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold ${isSelected ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
-                                            {idx + 1}
-                                        </span>
-                                        <span className={`flex-1 text-xs font-medium leading-snug ${isSelected ? 'text-red-700' : 'text-gray-700'}`}>
-                                            {step.name}
-                                        </span>
-                                        <div className="flex items-center gap-1 shrink-0">
-                                            {hasCorrections && (
-                                                <span title="Tiene correcciones">
-                                                    <AlertCircle className="w-3.5 h-3.5 text-red-500" />
-                                                </span>
-                                            )}
-                                            {step.isCompleted && (
-                                                <span title="Paso completado">
-                                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                                                </span>
-                                            )}
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Metadata */}
-                    <div className="space-y-4 mt-6">
-                        {/* Proyecto */}
-                        <div>
-                            <label className="block text-xs font-bold text-red-600 uppercase tracking-wider mb-1">
-                                Proyecto
-                            </label>
-                            <div className="flex items-center gap-1.5 text-xs font-medium text-gray-700 bg-white p-2 rounded-lg border border-gray-200">
-                                <FolderKanban className="w-3.5 h-3.5 text-gray-400" />
-                                <span>Infraestructura Cloud</span>
-                            </div>
-                        </div>
-                        {/* Categorías */}
-                        <div>
-                            <label className="block text-xs font-bold text-red-600 uppercase tracking-wider mb-1">
-                                Categorías
-                            </label>
-                            <div className="flex flex-wrap gap-1 bg-white p-2 rounded-lg border border-gray-200">
-                                {['Redis', 'HA', 'Cloud'].map((tag) => (
-                                    <span key={tag} className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-100">
-                                        <Tags className="w-2.5 h-2.5 text-red-500" />
-                                        {tag}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                        {/* Nombre */}
-                        <div>
-                            <label className="block text-xs font-bold text-red-600 uppercase tracking-wider mb-1">
-                                Nombre
-                            </label>
-                            <p className="text-xs font-semibold text-gray-800 leading-snug bg-white p-2 rounded-lg border border-gray-200">
-                                Aprovisionamiento de Clúster Redis Sentinel
-                            </p>
-                        </div>
-                        {/* Desarrollador */}
-                        <div>
-                            <label className="block text-xs font-bold text-red-600 uppercase tracking-wider mb-1">
-                                Desarrollador
-                            </label>
-                            <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-800 bg-white p-2 rounded-lg border border-gray-200">
-                                <User className="w-3.5 h-3.5 text-gray-400" />
-                                <span>María Gómez</span>
-                            </div>
-                        </div>
-                        {/* Stats de correcciones */}
-                        <div className="bg-white rounded-lg border border-gray-200 p-3 space-y-2">
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Resumen</p>
-                            <div className="flex items-center justify-between text-xs">
-                                <span className="flex items-center gap-1 text-gray-500">
-                                    <CheckSquare className="w-3.5 h-3.5 text-emerald-500" /> Pasos completados
-                                </span>
-                                <span className="font-bold text-gray-900">5 / 5</span>
-                            </div>
-                            <div className="flex items-center justify-between text-xs">
-                                <span className="flex items-center gap-1 text-gray-500">
-                                    <AlertCircle className="w-3.5 h-3.5 text-red-500" /> Correcciones
-                                </span>
-                                <span className="font-bold text-red-600">3</span>
-                            </div>
-                            <div className="flex items-center justify-between text-xs">
-                                <span className="flex items-center gap-1 text-gray-500">
-                                    <FileText className="w-3.5 h-3.5 text-blue-500" /> Inputs registrados
-                                </span>
-                                <span className="font-bold text-gray-900">10</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Botones de Acción al final del Sidebar */}
-                <div className="pt-6 mt-6 border-t border-gray-200 space-y-2.5">
-                    <button
-                        type="button"
-                        className="w-full py-2.5 px-4 text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg shadow-2xs transition-colors cursor-pointer"
-                    >
-                        Guardar
-                    </button>
-                    <button
-                        type="button"
-                        className="w-full py-2.5 px-4 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg shadow-2xs transition-colors cursor-pointer"
-                    >
-                        Enviar
-                    </button>
-                    <button
-                        type="button"
-                        className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs transition-colors cursor-pointer"
-                    >
-                        Aprobar
-                    </button>
-                </div>
-            </aside>
-
-            {/* Main Content */}
-            <main className="flex-1 overflow-y-auto p-6 bg-white">
-                {/* Step header */}
-                <div className="mb-6 pb-4 border-b border-gray-200">
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                            Paso {stepIndex + 1} de {REDIS_STEPS.length}
-                        </span>
-                        {selectedStep.isCompleted && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                                <CheckCircle2 className="w-3 h-3" /> Completado
-                            </span>
-                        )}
-                        {selectedStep.sections.some((sec) => sec.fields.some((f) => !!f.correction)) && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
-                                <AlertCircle className="w-3 h-3" /> Tiene correcciones
-                            </span>
-                        )}
-                    </div>
-                    <h2 className="text-xl font-bold text-gray-900">{selectedStep.name}</h2>
-                    <p className="text-sm text-gray-500 mt-1 leading-relaxed">{selectedStep.description}</p>
-                </div>
-
-                {/* Sections + Fields */}
-                <div className="space-y-8">
-                    {selectedStep.sections.map((section) => (
-                        <div key={section.id} className="space-y-4">
-                            {/* Section header */}
-                            <div className="flex items-start gap-3 pb-2 border-b border-gray-100">
-                                <div className="pt-0.5 shrink-0">
-                                    <div className="w-2 h-2 rounded-full bg-red-500 mt-1" />
-                                </div>
-                                <div>
-                                    <h3 className="text-sm font-bold text-gray-900">{section.name}</h3>
-                                    {section.description && (
-                                        <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{section.description}</p>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Fields */}
-                            <div className="space-y-4 pl-5">
-                                {section.fields.map(renderField)}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Footer navigation */}
-                <div className="mt-8 pt-4 border-t border-gray-200 flex items-center justify-between">
-                    <button
-                        type="button"
-                        disabled={stepIndex === 0}
-                        onClick={() => setSelectedStepId(REDIS_STEPS[stepIndex - 1].id)}
-                        className="text-xs font-semibold text-gray-600 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer flex items-center gap-1.5"
-                    >
-                        <ArrowLeft className="w-3.5 h-3.5" />
-                        Paso anterior
-                    </button>
-                    <button
-                        type="button"
-                        disabled={stepIndex === REDIS_STEPS.length - 1}
-                        onClick={() => setSelectedStepId(REDIS_STEPS[stepIndex + 1].id)}
-                        className="text-xs font-semibold text-gray-600 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer flex items-center gap-1.5"
-                    >
-                        Paso siguiente
-                        <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                </div>
-            </main>
-        </div>
-    );
-};
-
-// ─────────────────────────────────────────────────────────────────
-
 export const EvaluationManagement: React.FC = () => {
     // Por defecto mostramos la lista de evaluaciones "Pendientes" (Criterio de Aceptación 1)
     const [selectedTab, setSelectedTab] = useState<EvaluationTabState>('PENDING');
     const [pendingSubfilter, setPendingSubfilter] = useState<'ALL' | PendingSubtype>('ALL');
     const [searchQuery, setSearchQuery] = useState('');
     const [evaluations] = useState<EvaluationItem[]>(INITIAL_EVALUATIONS);
-    // Detalle de evaluación abierto
-    const [openDetailId, setOpenDetailId] = useState<number | null>(null);
-
-    // Si hay un detalle abierto (y es el de Redis Sentinel = idEvaluation 202), mostrar la vista
-    if (openDetailId === 202) {
-        return <EvaluationDetailView onBack={() => setOpenDetailId(null)} />;
-    }
 
     // Conteo por cada estado principal
     const pendingTotal = evaluations.filter(e => e.status === 'PENDING').length;
     const pendingNewCount = evaluations.filter(e => e.status === 'PENDING' && e.pendingSubtype === 'NEW').length;
-    const pendingWithCorrectionsCount = evaluations.filter(e => e.status === 'PENDING' && e.pendingSubtype === 'CORRECTIONS_IMPLEMENTED').length;
+    const pendingWithCorrectionsCount = evaluations.filter(
+        e => e.status === 'PENDING' && e.pendingSubtype === 'CORRECTIONS_IMPLEMENTED'
+    ).length;
     const approvedTotal = evaluations.filter(e => e.status === 'APPROVED').length;
     const correctionsSentTotal = evaluations.filter(e => e.status === 'CORRECTIONS_SENT').length;
 
@@ -853,16 +240,25 @@ export const EvaluationManagement: React.FC = () => {
                 key={item.idEvaluation}
                 className="group p-4 bg-white hover:bg-slate-50/80 transition-all border border-gray-200 hover:border-red-200 rounded-xl shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer"
                 onClick={() => {
-                    setOpenDetailId(item.idEvaluation);
+                    console.log('Navegar a Detalle de Evaluación:', item.idEvaluation);
                 }}
             >
                 <div className="space-y-1.5 flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-
+                        <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                            Eval #{item.idEvaluation}
+                        </span>
+                        <span className="text-xs font-mono text-gray-400">
+                            (Ejecución #{item.idExecution})
+                        </span>
                         <h3 className="text-sm font-bold text-gray-900 group-hover:text-red-600 transition-colors">
                             {item.procedureTitle}
                         </h3>
-
+                        {item.procedureVersion && (
+                            <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                                {item.procedureVersion}
+                            </span>
+                        )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
@@ -896,7 +292,11 @@ export const EvaluationManagement: React.FC = () => {
                                 ✎ {item.correctionsCount} corrección{item.correctionsCount > 1 ? 'es' : ''}
                             </span>
                         )}
-
+                        {item.summaryNotes && (
+                            <p className="text-xs text-gray-600 italic truncate max-w-xl">
+                                "{item.summaryNotes}"
+                            </p>
+                        )}
                     </div>
                 </div>
 
@@ -906,7 +306,7 @@ export const EvaluationManagement: React.FC = () => {
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            setOpenDetailId(item.idEvaluation);
+                            console.log('Ver detalle de evaluación:', item.idEvaluation);
                         }}
                         className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 hover:text-red-900 border border-red-200 rounded-lg transition-colors"
                         title="Ver Detalle de Evaluación"
@@ -927,20 +327,41 @@ export const EvaluationManagement: React.FC = () => {
                 {/* Encabezado Principal */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-200 pb-4">
                     <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider bg-red-100 text-red-700 rounded">
+                                Rol: Líder Técnico
+                            </span>
+                            <span className="text-xs text-gray-400 font-mono">HU-012</span>
+                        </div>
                         <h1 className="text-2xl font-bold text-gray-900">Gestión de Evaluaciones</h1>
                         <p className="text-sm text-gray-500">
                             Supervisa y gestiona las revisiones de ejecuciones enviadas por los desarrolladores.
                         </p>
                     </div>
 
-
+                    {/* Resumen numérico de estados con Rojo como principal */}
+                    <div className="flex items-center gap-2">
+                        <div className="px-3.5 py-2 bg-red-50 border border-red-200 rounded-xl text-center">
+                            <span className="block text-xs font-medium text-red-700">Pendientes</span>
+                            <span className="text-lg font-black text-red-900 leading-none">{pendingTotal}</span>
+                        </div>
+                        <div className="px-3.5 py-2 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
+                            <span className="block text-xs font-medium text-emerald-700">Aprobadas</span>
+                            <span className="text-lg font-black text-emerald-900 leading-none">{approvedTotal}</span>
+                        </div>
+                        <div className="px-3.5 py-2 bg-rose-50 border border-rose-200 rounded-xl text-center">
+                            <span className="block text-xs font-medium text-rose-700">Correcciones</span>
+                            <span className="text-lg font-black text-rose-900 leading-none">{correctionsSentTotal}</span>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Barra de Control: Pestañas de Estado y Buscador */}
                 <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         {/* Pestañas de Estados: Pendientes (defecto con Rojo), Aprobadas, Correcciones Enviadas */}
-                        <div className="inline-flex p-1 bg-gray-100/90 rounded-xl border border-gray-200 text-xs font-semibold">                            <button
+                        <div className="inline-flex p-1 bg-gray-100/90 rounded-xl border border-gray-200 text-xs font-semibold">
+                            <button
                                 onClick={() => {
                                     setSelectedTab('PENDING');
                                     setPendingSubfilter('ALL');
@@ -995,52 +416,59 @@ export const EvaluationManagement: React.FC = () => {
                             </button>
                         </div>
 
-
+                        {/* Buscador Rápido */}
+                        <div className="relative w-full sm:w-72">
+                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Buscar procedimiento, dev o proyecto..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-9 pr-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-gray-800"
+                            />
+                        </div>
                     </div>
 
                     {/* Subfiltros para PENDIENTES con Rojo como protagonista */}
-                    {/* Buscador */}
-                    <div className="relative">
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Buscar por procedimiento, proyecto o desarrollador..."
-                            className="w-full pl-9 pr-4 py-2 text-xs bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-colors"
-                        />
-                        <span className="absolute left-3 top-2.5 text-gray-400">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </span>
-                    </div>
-                    {/* Subfiltros para Pendientes */}
                     {selectedTab === 'PENDING' && (
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs text-gray-500 font-medium">Filtrar:</span>
-                            {(['ALL', 'NEW', 'CORRECTIONS_IMPLEMENTED'] as const).map((sf) => {
-                                const count = sf === 'ALL' ? pendingTotal : sf === 'NEW' ? pendingNewCount : pendingWithCorrectionsCount;
-                                const label = sf === 'ALL' ? 'Todas' : sf === 'NEW' ? 'Nuevas' : 'Con correcciones';
-                                return (
-                                    <button
-                                        key={sf}
-                                        type="button"
-                                        onClick={() => setPendingSubfilter(sf)}
-                                        className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors cursor-pointer ${pendingSubfilter === sf
-                                            ? 'bg-red-600 text-white border-red-600'
-                                            : 'bg-white text-gray-600 border-gray-200 hover:border-red-300'
-                                            }`}
-                                    >
-                                        {label}
-                                        <span className={`text-[10px] px-1.5 py-0 rounded-full font-bold ${pendingSubfilter === sf ? 'bg-red-700 text-white' : 'bg-gray-100 text-gray-500'}`}>
-                                            {count}
-                                        </span>
-                                    </button>
-                                );
-                            })}
+                        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                <Filter className="w-3.5 h-3.5 text-gray-400" />
+                                <span className="font-medium text-gray-700">Filtrar lista de Pendientes:</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                                <button
+                                    onClick={() => setPendingSubfilter('ALL')}
+                                    className={`px-3 py-1 rounded-md text-xs font-medium transition ${pendingSubfilter === 'ALL'
+                                        ? 'bg-red-600 text-white shadow-xs'
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                        }`}
+                                >
+                                    Todas ({pendingTotal})
+                                </button>
+                                <button
+                                    onClick={() => setPendingSubfilter('NEW')}
+                                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition ${pendingSubfilter === 'NEW'
+                                        ? 'bg-red-700 text-white shadow-xs'
+                                        : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
+                                        }`}
+                                >
+                                    <Sparkles className="w-3 h-3" />
+                                    Nuevas ({pendingNewCount})
+                                </button>
+                                <button
+                                    onClick={() => setPendingSubfilter('CORRECTIONS_IMPLEMENTED')}
+                                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition ${pendingSubfilter === 'CORRECTIONS_IMPLEMENTED'
+                                        ? 'bg-red-600 text-white shadow-xs'
+                                        : 'bg-red-50 text-red-800 border border-red-200 hover:bg-red-100'
+                                        }`}
+                                >
+                                    <RefreshCw className="w-3 h-3" />
+                                    Con Correcciones Implementadas ({pendingWithCorrectionsCount})
+                                </button>
+                            </div>
                         </div>
                     )}
-
                 </div>
 
                 {/* CONTENIDO PRINCIPAL: LISTA SEGÚN ESTADO SELECCIONADO */}

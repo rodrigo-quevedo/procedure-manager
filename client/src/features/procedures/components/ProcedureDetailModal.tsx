@@ -12,7 +12,6 @@ import {
   AlertCircle,
   XCircle,
   Percent,
-
   User,
   Tags,
 } from 'lucide-react';

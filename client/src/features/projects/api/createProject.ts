@@ -1,42 +1,47 @@
-import type { User } from '@/features/auth/types';
-import { storage } from '@/services/storage';
-import type { ClientProject, ProjectAssignmentInput } from '../types';
-import { normalizeProjectAssignment } from '../utils/validateProject';
+import type { CreateProjectDTO, ProjectDetailResponse } from '@pm/shared';
+import type { ProjectAssignmentInput } from '../types';
+
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
+
+const getToken = (): string => {
+  const raw = localStorage.getItem('pm_auth_session');
+  if (!raw) throw new Error('Sesión no encontrada. Por favor, inicia sesión nuevamente.');
+  const session = JSON.parse(raw) as { token: string };
+  return session.token;
+};
 
 export const createProject = async (
-  organizationId: string,
-  actor: User,
   input: ProjectAssignmentInput,
-): Promise<ClientProject> => {
-  await new Promise((resolve) => setTimeout(resolve, 400));
-
-  if (actor.organizationId !== organizationId) {
-    throw new Error('No puedes crear proyectos fuera de tu organización.');
+  organizationId?: string | number,
+): Promise<ProjectDetailResponse> => {
+  if (!input.confidentiality) {
+    throw new Error('El nivel de confidencialidad es obligatorio.');
   }
 
-  const organizationMembers = storage
-    .getUsersByOrganization(organizationId)
-    .filter((member) => member.role !== 'ORGANIZACION');
-
-  const assignment = normalizeProjectAssignment(input, {
-    actor,
-    organizationMembers,
-    ensureActorAsLeader: actor.role === 'LIDER',
-  });
-
-  const now = new Date().toISOString();
-  const project: ClientProject = {
-    id: `prj_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
-    organizationId,
-    name: assignment.name,
-    confidentiality: assignment.confidentiality,
-    leaderIds: assignment.leaderIds,
-    memberIds: assignment.memberIds,
-    createdBy: actor.id,
-    createdAt: now,
-    updatedAt: now,
+  const payload: CreateProjectDTO & { organizationId?: number } = {
+    name: input.name.trim(),
+    confidentialityLevel: input.confidentiality,
+    leaderIds: input.leaderIds,
+    memberIds: input.memberIds,
   };
 
-  storage.saveProject(project);
-  return project;
+  if (organizationId) {
+    payload.organizationId = Number(organizationId);
+  }
+
+  const res = await fetch(`${API_BASE}/api/projects`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { message?: string };
+    throw new Error(body.message ?? 'Error al crear el proyecto.');
+  }
+
+  return res.json();
 };

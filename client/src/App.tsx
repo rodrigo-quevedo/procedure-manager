@@ -1,38 +1,57 @@
 import { useState, useEffect } from 'react';
 import { RegisterForm, LoginForm } from '@/features/auth';
-import type { AuthSession, Organization, User } from '@/features/auth';
+import type { AuthSession } from '@/features/auth';
 import { OrganizationDashboard } from '@/components/dashboards/OrganizationDashboard';
 import { DeveloperDashboard } from '@/components/dashboards/DeveloperDashboard';
 import { LeaderDashboard } from '@/components/dashboards/LeaderDashboard';
-import { storage } from '@/services/storage';
 
 type AuthView = 'register' | 'login';
 
+const SESSION_KEY = 'pm_auth_session';
+
+const loadSession = (): AuthSession | null => {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const session: AuthSession = JSON.parse(raw);
+    // Discard expired sessions
+    if (session.expiresAt < Date.now()) {
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+    return session;
+  } catch {
+    return null;
+  }
+};
+
+const saveSession = (session: AuthSession): void => {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+};
+
+const clearSession = (): void => {
+  localStorage.removeItem(SESSION_KEY);
+};
+
 export function App() {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [currentOrganization, setCurrentOrganization] = useState<Organization | null>(null);
-  const [currentAuthView, setCurrentAuthView] = useState<AuthView>('register');
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [currentAuthView, setCurrentAuthView] = useState<AuthView>('login');
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    const savedUser = storage.getCurrentUser();
-    const savedOrg = storage.getCurrentOrganization();
-
-    if (savedUser) {
-      setCurrentUser(savedUser);
-      setCurrentOrganization(savedOrg);
-    }
+    const saved = loadSession();
+    if (saved) setSession(saved);
     setIsInitializing(false);
   }, []);
 
-  const handleAuthSuccess = (session: AuthSession) => {
-    setCurrentUser(session.user);
-    setCurrentOrganization(session.organization);
+  const handleAuthSuccess = (newSession: AuthSession) => {
+    saveSession(newSession);
+    setSession(newSession);
   };
 
   const handleLogout = () => {
-    setCurrentUser(null);
-    setCurrentOrganization(null);
+    clearSession();
+    setSession(null);
     setCurrentAuthView('login');
   };
 
@@ -45,33 +64,34 @@ export function App() {
   }
 
   // Routing by role after authentication
-  if (currentUser) {
-    // Routing by role after authentication
-    if (currentUser.role === 'ORGANIZACION') {
+  if (session) {
+    const { user } = session;
+
+    if (user.role === 'ORGANIZATION') {
       return (
         <OrganizationDashboard
-          user={currentUser}
-          organization={currentOrganization}
+          user={user as any}
+          organization={null}
           onLogout={handleLogout}
         />
       );
     }
 
-    if (currentUser.role === 'LIDER') {
+    if (user.role === 'LEADER') {
       return (
         <LeaderDashboard
-          user={currentUser}
-          organization={currentOrganization}
+          user={user as any}
+          organization={null}
           onLogout={handleLogout}
         />
       );
     }
 
-    // DESARROLLADOR
+    // DEVELOPER
     return (
       <DeveloperDashboard
-        user={currentUser}
-        organization={currentOrganization}
+        user={user as any}
+        organization={null}
         onLogout={handleLogout}
       />
     );
@@ -81,7 +101,7 @@ export function App() {
     <>
       {currentAuthView === 'register' ? (
         <RegisterForm
-          onSuccess={handleAuthSuccess}
+          onSuccess={() => setCurrentAuthView('login')}
           onNavigateToLogin={() => setCurrentAuthView('login')}
         />
       ) : (
@@ -92,10 +112,6 @@ export function App() {
       )}
     </>
   );
-
-  // return <ExecutionManagementMock />;
-
-
 }
 
 export default App;

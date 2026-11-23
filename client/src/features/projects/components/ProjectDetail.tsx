@@ -1,18 +1,19 @@
 import { useState, type FormEvent } from 'react';
-import type { User } from '@/features/auth/types';
+import type { MemberResponse, ConfidentialityLevel } from '@pm/shared';
 import { updateProject } from '../api/updateProject';
-import { CONFIDENTIALITY_LABELS, type ConfidentialityLevel, type ClientProject as Project } from '../types';
+import { CONFIDENTIALITY_LABELS, type ClientProject as Project } from '../types';
 import { ProjectAssignmentFields } from './ProjectAssignmentFields';
 
 interface ProjectDetailProps {
   project: Project;
-  actor: User;
-  members: User[];
+  actor: { id: number; role: string; fullName?: string; name?: string; email: string };
+  members: MemberResponse[];
   onUpdated: (project: Project) => void;
   onBack: () => void;
 }
 
-function formatDate(value: string): string {
+function formatDate(value?: string): string {
+  if (!value) return '-';
   return new Date(value).toLocaleString('es-AR', {
     dateStyle: 'medium',
     timeStyle: 'short',
@@ -26,10 +27,12 @@ export function ProjectDetail({
   onUpdated,
   onBack,
 }: ProjectDetailProps) {
+  const isOrg = actor.role === 'ORGANIZATION' || actor.role === 'ORGANIZACION';
+
   const [name, setName] = useState(project.name);
-  const [confidentiality, setConfidentiality] = useState<ConfidentialityLevel>(project.confidentiality);
-  const [leaderIds, setLeaderIds] = useState<string[]>(project.leaderIds);
-  const [memberIds, setMemberIds] = useState<string[]>(project.memberIds);
+  const [confidentiality, setConfidentiality] = useState<ConfidentialityLevel>(project.confidentialityLevel);
+  const [leaderIds, setLeaderIds] = useState<number[]>(project.leaderIds);
+  const [memberIds, setMemberIds] = useState<number[]>(project.memberIds);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -51,14 +54,14 @@ export function ProjectDetail({
       setError('El nivel de confidencialidad es obligatorio.');
       return;
     }
-    if (actor.role === 'ORGANIZACION' && leaderIds.length === 0) {
+    if (isOrg && leaderIds.length === 0) {
       setError('Debes seleccionar al menos un Líder.');
       return;
     }
 
     setIsLoading(true);
     try {
-      const updated = await updateProject(project.id, actor, {
+      const updated = await updateProject(project.id, {
         name,
         confidentiality,
         leaderIds,
@@ -94,7 +97,7 @@ export function ProjectDetail({
         </div>
         <div className="text-right shrink-0">
           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
-            {CONFIDENTIALITY_LABELS[project.confidentiality]}
+            {CONFIDENTIALITY_LABELS[project.confidentialityLevel]}
           </span>
           <p className="text-[11px] text-gray-400 mt-1">Actualizado: {formatDate(project.updatedAt)}</p>
         </div>

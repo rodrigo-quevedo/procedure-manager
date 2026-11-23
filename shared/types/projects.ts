@@ -38,7 +38,8 @@ export interface ProjectMember {
 export interface CreateProjectDTO {
     name: string;
     confidentialityLevel: ConfidentialityLevel;
-    assignedMemberIds: number[];
+    leaderIds: number[];
+    memberIds?: number[];
 }
 
 /**
@@ -47,5 +48,15 @@ export interface CreateProjectDTO {
 export interface UpdateProjectDTO {
     name?: string;
     confidentialityLevel?: ConfidentialityLevel;
-    assignedMemberIds?: number[];
+    leaderIds?: number[];
+    memberIds?: number[];
+}
+
+/**
+ * Project response with assigned members breakdown.
+ */
+export interface ProjectDetailResponse extends Project {
+    leaderIds: number[];
+    memberIds: number[];
+    updatedAt?: string;
 }

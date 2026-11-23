@@ -9,7 +9,7 @@ interface MemberDashboardProps {
 }
 
 export const MemberDashboard = ({ user, organization, onLogout }: MemberDashboardProps) => {
-  if (user.role === 'LIDER') {
+  if (user.role === 'LEADER') {
     return <LeaderDashboard user={user} organization={organization} onLogout={onLogout} />;
   }
   return <DeveloperDashboard user={user} organization={organization} onLogout={onLogout} />;
