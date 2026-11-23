@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { RegisterForm, LoginForm } from '@/features/auth';
 import type { AuthSession, Organization, User } from '@/features/auth';
 import { OrganizationDashboard } from '@/components/OrganizationDashboard';
-import { MemberDashboard } from '@/components/MemberDashboard';
+import { DeveloperDashboard } from '@/components/DeveloperDashboard';
+import { LeaderDashboard } from '@/components/LeaderDashboard';
 import { storage } from '@/services/storage';
 import ExecutionManagementMock from './examples/ExecutionManagement';
 
@@ -46,6 +47,7 @@ export function App() {
 
   // Routing by role after authentication
   if (currentUser) {
+    // Routing by role after authentication
     if (currentUser.role === 'ORGANIZACION') {
       return (
         <OrganizationDashboard
@@ -56,9 +58,19 @@ export function App() {
       );
     }
 
-    // LIDER or DESARROLLADOR
+    if (currentUser.role === 'LIDER') {
+      return (
+        <LeaderDashboard
+          user={currentUser}
+          organization={currentOrganization}
+          onLogout={handleLogout}
+        />
+      );
+    }
+
+    // DESARROLLADOR
     return (
-      <MemberDashboard
+      <DeveloperDashboard
         user={currentUser}
         organization={currentOrganization}
         onLogout={handleLogout}

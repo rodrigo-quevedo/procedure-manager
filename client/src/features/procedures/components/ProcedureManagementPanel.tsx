@@ -142,8 +142,8 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
   }, [procedures, searchTerm, detailScope, allSteps, selectedTags]);
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 items-start">
-      {/* Sidebar Nav Reusable */}
+    <div className="flex flex-col md:flex-row gap-8 items-start w-full">
+      {/* Sidebar Nav Reusable pegado a la izquierda */}
       <ProceduresSidebarNav
         activeSection={activeSection}
         onSelectSection={(section) => {
@@ -154,26 +154,27 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
         onCreateProcedure={onNewProcedure}
       />
 
-      {/* Contenido Principal de Gestión de Procedimientos */}
-      <div className="flex-1 min-w-0 space-y-6 w-full">
-        {/* Header and Quick Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 tracking-tight">
-              Gestión de Procedimientos
-            </h2>
-            <p className="text-xs text-gray-500 mt-1">
-              Explora, busca y ejecuta procedimientos estándar aprobados para tu organización.
-            </p>
+      {/* Contenido Principal de Gestión de Procedimientos - Centrado */}
+      <div className="flex-1 w-full min-w-0 flex justify-center">
+        <div className="w-full max-w-5xl space-y-6">
+          {/* Header and Quick Actions */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+                Gestión de Procedimientos
+              </h2>
+              <p className="text-xs text-gray-500 mt-1">
+                Explora, busca y ejecuta procedimientos estándar aprobados para tu organización.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onNewProcedure}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 cursor-pointer"
+            >
+              <span className="text-sm font-bold leading-none">+</span> Crear y Ejecutar Procedimiento
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onNewProcedure}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 cursor-pointer"
-          >
-            <span className="text-sm font-bold leading-none">+</span> Crear y Ejecutar Procedimiento
-          </button>
-        </div>
 
       {/* SEARCH BAR & DETAIL SCOPE CHECKBOXES (HU-008 CA 1) */}
       <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs space-y-3">
@@ -391,6 +392,7 @@ export const ProcedureManagementPanel: React.FC<ProcedureManagementPanelProps> =
             }}
           />
         )}
+        </div>
       </div>
     </div>
   );

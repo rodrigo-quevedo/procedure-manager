@@ -269,8 +269,8 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
   ];
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 items-start">
-      {/* Sidebar Nav Reusable */}
+    <div className="flex flex-col md:flex-row gap-8 items-start w-full">
+      {/* Sidebar Nav Reusable pegado a la izquierda */}
       <ProceduresSidebarNav
         activeSection={activeSection}
         onSelectSection={(section) => {
@@ -281,41 +281,42 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
         onCreateProcedure={onCreateAndExecute}
       />
 
-      {/* Contenido Principal de Ejecuciones */}
-      <div className="flex-1 min-w-0 space-y-6 w-full">
-        {/* Seccion 1 */}
-        <div className="rounded-lg bg-rose-50 border border-rose-200/80 p-5 shadow-sm transition-all duration-300 hover:shadow-md space-y-4">
-        <div>
-          <div className="flex items-center justify-between group relative">
-            <div className="flex items-center gap-3">
-              <h2 className="cursor-default text-base font-bold text-gray-900 tracking-wide flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-red-600 transition-transform duration-200 group-hover:scale-105" />
-                Corregir
-              </h2>
-              <span className="inline-flex items-center justify-center min-w-5 h-5 px-2 text-xs font-semibold rounded-full bg-red-600 text-white shadow-2xs">
-                {correctionExecutions.length}
-              </span>
+      {/* Contenido Principal de Ejecuciones - Centrado */}
+      <div className="flex-1 w-full min-w-0 flex justify-center">
+        <div className="w-full max-w-5xl space-y-6">
+          {/* Seccion 1 */}
+          <div className="rounded-lg bg-rose-50 border border-rose-200/80 p-5 shadow-sm transition-all duration-300 hover:shadow-md space-y-4">
+            <div>
+              <div className="flex items-center justify-between group relative">
+                <div className="flex items-center gap-3">
+                  <h2 className="cursor-default text-base font-bold text-gray-900 tracking-wide flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-red-600 transition-transform duration-200 group-hover:scale-105" />
+                    Corregir
+                  </h2>
+                  <span className="inline-flex items-center justify-center min-w-5 h-5 px-2 text-xs font-semibold rounded-full bg-red-600 text-white shadow-2xs">
+                    {correctionExecutions.length}
+                  </span>
+                </div>
+              </div>
+              <hr className="border-t border-rose-200 mt-3" />
+            </div>
+
+            <div className="overflow-hidden rounded-md border border-rose-200/60 bg-white">
+              <ExecutionTable
+                data={correctionExecutions}
+                columns={correctionColumns}
+                onRowClick={(execution) => handleOpenDetails(execution.id)}
+                renderActions={renderActionButtons}
+                emptyMessage="No hay ejecuciones pendientes de corrección actualmente."
+                emptyClassName="p-4 bg-white text-center text-xs text-gray-500"
+                headerClassName="bg-rose-100/60 border-b border-rose-200"
+                headerTextClassName="text-rose-900"
+                rowHoverClassName="hover:bg-rose-50/40"
+                divideClassName="divide-rose-100"
+                procedureHoverColor="red"
+              />
             </div>
           </div>
-          <hr className="border-t border-rose-200 mt-3" />
-        </div>
-
-        <div className="overflow-hidden rounded-md border border-rose-200/60 bg-white">
-          <ExecutionTable
-            data={correctionExecutions}
-            columns={correctionColumns}
-            onRowClick={(execution) => handleOpenDetails(execution.id)}
-            renderActions={renderActionButtons}
-            emptyMessage="No hay ejecuciones pendientes de corrección actualmente."
-            emptyClassName="p-4 bg-white text-center text-xs text-gray-500"
-            headerClassName="bg-rose-100/60 border-b border-rose-200"
-            headerTextClassName="text-rose-900"
-            rowHoverClassName="hover:bg-rose-50/40"
-            divideClassName="divide-rose-100"
-            procedureHoverColor="red"
-          />
-        </div>
-      </div>
 
       {/* SECCIÓN 2: EN PAUSA */}
       <div className="rounded-lg bg-gray-50/80 border border-gray-200 p-5 shadow-2xs transition-all duration-300 hover:shadow-sm space-y-4">
@@ -501,6 +502,7 @@ export const ExecutionManagementPanel: React.FC<ExecutionManagementPanelProps> =
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

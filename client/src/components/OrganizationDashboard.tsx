@@ -10,6 +10,7 @@ import {
   toggleMemberStatus,
 } from '@/features/members';
 import { ProjectsPanel } from '@/features/projects';
+import { NavbarHeader } from '@/components/NavbarHeader';
 
 interface OrganizationDashboardProps {
   user: User;
@@ -109,86 +110,67 @@ export const OrganizationDashboard = ({
     }
   };
 
+  const pageTitle =
+    activeTab === 'MEMBERS'
+      ? 'Gestión de Miembros'
+      : activeTab === 'PROJECTS'
+      ? 'Gestión de Proyectos'
+      : 'Resumen de Organización';
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Top Navigation Bar - Todoist style */}
-      <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-md bg-red-600 flex items-center justify-center text-white font-bold text-sm shadow-xs">
-              PM
-            </div>
-            <span className="font-semibold text-gray-900 text-sm tracking-tight">
-              {organization?.name || 'Procedure Manager'}
-            </span>
-          </div>
-
-          <nav className="flex flex-wrap items-center gap-1">
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('MEMBERS');
-                setSelectedMember(null);
-                setIsCreatingMember(false);
-              }}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
-                activeTab === 'MEMBERS'
-                  ? 'bg-red-50 text-red-700'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-            >
-              Gestión de Miembros
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('PROJECTS');
-                setSelectedMember(null);
-                setIsCreatingMember(false);
-              }}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
-                activeTab === 'PROJECTS'
-                  ? 'bg-red-50 text-red-700'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-            >
-              Proyectos
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('OVERVIEW');
-                setSelectedMember(null);
-                setIsCreatingMember(false);
-              }}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
-                activeTab === 'OVERVIEW'
-                  ? 'bg-red-50 text-red-700'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-            >
-              Resumen
-            </button>
-          </nav>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-xs font-medium text-gray-900">{user.email}</p>
-            <span className="inline-block text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-red-100 text-red-700">
-              {user.role}
-            </span>
-          </div>
-
-          <button
-            onClick={handleLogout}
-            type="button"
-            className="text-xs font-medium text-gray-600 hover:text-red-600 border border-gray-200 hover:border-red-200 px-3 py-1.5 rounded-md bg-white hover:bg-red-50 transition-colors cursor-pointer"
-          >
-            Cerrar sesión
-          </button>
-        </div>
-      </header>
+      <NavbarHeader
+        user={user}
+        organization={organization}
+        pageTitle={pageTitle}
+        onLogout={handleLogout}
+      >
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('MEMBERS');
+            setSelectedMember(null);
+            setIsCreatingMember(false);
+          }}
+          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+            activeTab === 'MEMBERS'
+              ? 'bg-red-50 text-red-700'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+          }`}
+        >
+          Gestión de Miembros
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('PROJECTS');
+            setSelectedMember(null);
+            setIsCreatingMember(false);
+          }}
+          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+            activeTab === 'PROJECTS'
+              ? 'bg-red-50 text-red-700'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+          }`}
+        >
+          Proyectos
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('OVERVIEW');
+            setSelectedMember(null);
+            setIsCreatingMember(false);
+          }}
+          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+            activeTab === 'OVERVIEW'
+              ? 'bg-red-50 text-red-700'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+          }`}
+        >
+          Resumen
+        </button>
+      </NavbarHeader>
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8">
