@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { RegisterForm, LoginForm } from '@/features/auth';
 import type { AuthSession, Organization, User } from '@/features/auth';
-import { OrganizationDashboard } from '@/components/OrganizationDashboard';
-import { DeveloperDashboard } from '@/components/DeveloperDashboard';
-import { LeaderDashboard } from '@/components/LeaderDashboard';
+import { OrganizationDashboard } from '@/components/dashboards/OrganizationDashboard';
+import { DeveloperDashboard } from '@/components/dashboards/DeveloperDashboard';
+import { LeaderDashboard } from '@/components/dashboards/LeaderDashboard';
 import { storage } from '@/services/storage';
 import ExecutionManagementMock from './examples/ExecutionManagement';
 

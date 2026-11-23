@@ -21,8 +21,8 @@ export const NavbarHeader: React.FC<NavbarHeaderProps> = ({
     user.role === 'LIDER'
       ? 'Líder'
       : user.role === 'ORGANIZACION'
-      ? 'Organización'
-      : 'Desarrollador';
+        ? 'Organización'
+        : 'Desarrollador';
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10 gap-4">
@@ -31,12 +31,15 @@ export const NavbarHeader: React.FC<NavbarHeaderProps> = ({
           <img
             src={logoImg}
             alt="Logo"
-            className="w-8 h-8 object-contain shrink-0"
+            className="w-9 h-9 object-contain shrink-0"
           />
           {pageTitle && (
-            <span className="font-semibold text-gray-900 text-sm tracking-tight">
-              {pageTitle}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="h-5 w-px bg-gray-200" />
+              <span className="font-extrabold text-gray-700 text-lg tracking-normal">
+                {pageTitle}
+              </span>
+            </div>
           )}
         </div>
 

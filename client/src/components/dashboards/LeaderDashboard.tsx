@@ -18,6 +18,9 @@ import {
   type ExecutionListItem,
 } from '@/features/procedure_executions';
 import { NavbarHeader } from '@/components/NavbarHeader';
+import { SidebarNav, SidebarNavItem } from '@/components/SidebarNav';
+import { FolderKanban, ClipboardCheck, PlaySquare, BookOpen, Plus } from 'lucide-react';
+import { EvaluationManagement } from '@/examples/EvaluationManagement';
 
 interface LeaderDashboardProps {
   user: User;
@@ -25,7 +28,7 @@ interface LeaderDashboardProps {
   onLogout: () => void;
 }
 
-type LeaderTab = 'PROJECTS' | 'EXECUTIONS' | 'PROCEDURES';
+type LeaderTab = 'PROJECTS' | 'EVALUATIONS' | 'EXECUTIONS' | 'PROCEDURES';
 
 export const LeaderDashboard = ({
   user,
@@ -163,9 +166,34 @@ export const LeaderDashboard = ({
   const pageTitle =
     activeTab === 'PROJECTS'
       ? 'Gestión de Proyectos'
-      : activeTab === 'EXECUTIONS'
-      ? 'Gestión de Ejecuciones'
-      : 'Gestión de Procedimientos';
+      : activeTab === 'EVALUATIONS'
+        ? 'Gestión de Evaluaciones'
+        : activeTab === 'EXECUTIONS'
+          ? 'Gestión de Ejecuciones'
+          : 'Biblioteca de Procedimientos Estándar';
+
+  const sidebarItems: SidebarNavItem<LeaderTab>[] = [
+    {
+      id: 'PROJECTS',
+      label: 'Proyectos',
+      icon: <FolderKanban className="w-4 h-4" />,
+    },
+    {
+      id: 'EVALUATIONS',
+      label: 'Evaluaciones',
+      icon: <ClipboardCheck className="w-4 h-4" />,
+    },
+    {
+      id: 'EXECUTIONS',
+      label: 'Ejecuciones',
+      icon: <PlaySquare className="w-4 h-4" />,
+    },
+    {
+      id: 'PROCEDURES',
+      label: 'Procedimientos Estándar',
+      icon: <BookOpen className="w-4 h-4" />,
+    },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-gray-50/50">
@@ -174,31 +202,7 @@ export const LeaderDashboard = ({
         organization={organization}
         pageTitle={pageTitle}
         onLogout={handleLogout}
-      >
-        <button
-          type="button"
-          onClick={() => setActiveTab('PROJECTS')}
-          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
-            activeTab === 'PROJECTS'
-              ? 'bg-red-50 text-red-700'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-          }`}
-        >
-          Proyectos
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('EXECUTIONS')}
-          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
-            activeTab === 'EXECUTIONS' || activeTab === 'PROCEDURES'
-              ? 'bg-red-50 text-red-700'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-          }`}
-        >
-          Procedimientos y Ejecuciones
-        </button>
-      </NavbarHeader>
+      />
 
       <main className="flex-1 w-full px-4 sm:px-6 py-6">
         {globalSuccess && (
@@ -210,41 +214,70 @@ export const LeaderDashboard = ({
           </div>
         )}
 
-        {/* Projects Tab for Leader */}
-        {activeTab === 'PROJECTS' && organization && (
-          <div className="max-w-5xl mx-auto">
-            <ProjectsPanel
-              organizationId={organization.id}
-              actor={user}
-              onSuccess={showSuccessFeedback}
-            />
+        <div className="flex flex-col md:flex-row gap-8 items-start w-full">
+          {/* Side Navbar de Líder pegado a la izquierda */}
+          <SidebarNav<LeaderTab>
+            items={sidebarItems}
+            activeId={activeTab}
+            onSelect={(tab) => setActiveTab(tab)}
+            actionButton={{
+              label: 'Crear Procedimiento',
+              icon: <Plus className="w-3.5 h-3.5 stroke-[2.5]" />,
+              onClick: handleStartCreationAndExecution,
+            }}
+          />
+
+          {/* Contenido centrado */}
+          <div className="flex-1 w-full min-w-0 flex justify-center">
+            <div className="w-full max-w-5xl space-y-6">
+              {/* Projects Tab for Leader */}
+              {activeTab === 'PROJECTS' && organization && (
+                <ProjectsPanel
+                  organizationId={organization.id}
+                  actor={user}
+                  onSuccess={showSuccessFeedback}
+                />
+              )}
+
+              {/* Evaluations Tab for Leader */}
+              {activeTab === 'EVALUATIONS' && (
+                <div className="w-full">
+                  <EvaluationManagement />
+                </div>
+              )}
+
+              {/* Procedures Management Tab (HU-008 & Entry to HU-007 / HU-009) */}
+              {activeTab === 'PROCEDURES' && (
+                <div className="w-full">
+                  <ProcedureManagementPanel
+                    procedures={procedures}
+                    onExecuteProcedure={handleExecuteProcedure}
+                    onNewProcedure={handleStartCreationAndExecution}
+                    activeSection="PROCEDURES"
+                    onSelectSection={(sec) => setActiveTab(sec as LeaderTab)}
+                  />
+                </div>
+              )}
+
+              {/* Executions Management Tab (HU-011) */}
+              {activeTab === 'EXECUTIONS' && (
+                <div className="w-full">
+                  <ExecutionManagementPanel
+                    executions={executions}
+                    onRefresh={loadAllData}
+                    onResumeExecution={handleResumeExecution}
+                    onSuccessFeedback={showSuccessFeedback}
+                    onCreateAndExecute={handleStartCreationAndExecution}
+                    onSearchProcedures={() => setActiveTab('PROCEDURES')}
+                    activeSection="EXECUTIONS"
+                    onSelectSection={(sec) => setActiveTab(sec as LeaderTab)}
+                    hideSidebar
+                  />
+                </div>
+              )}
+            </div>
           </div>
-        )}
-
-        {/* Procedures Management Tab (HU-008 & Entry to HU-007 / HU-009) */}
-        {activeTab === 'PROCEDURES' && (
-          <ProcedureManagementPanel
-            procedures={procedures}
-            onExecuteProcedure={handleExecuteProcedure}
-            onNewProcedure={handleStartCreationAndExecution}
-            activeSection="PROCEDURES"
-            onSelectSection={(sec) => setActiveTab(sec)}
-          />
-        )}
-
-        {/* Executions Management Tab (HU-011) */}
-        {activeTab === 'EXECUTIONS' && (
-          <ExecutionManagementPanel
-            executions={executions}
-            onRefresh={loadAllData}
-            onResumeExecution={handleResumeExecution}
-            onSuccessFeedback={showSuccessFeedback}
-            onCreateAndExecute={handleStartCreationAndExecution}
-            onSearchProcedures={() => setActiveTab('PROCEDURES')}
-            activeSection="EXECUTIONS"
-            onSelectSection={(sec) => setActiveTab(sec)}
-          />
-        )}
+        </div>
       </main>
     </div>
   );

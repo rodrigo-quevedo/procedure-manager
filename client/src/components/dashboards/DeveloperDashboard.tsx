@@ -161,7 +161,7 @@ export const DeveloperDashboard = ({
   }
 
   const pageTitle =
-    activeTab === 'EXECUTIONS' ? 'Gestión de Ejecuciones' : 'Gestión de Procedimientos';
+    activeTab === 'EXECUTIONS' ? 'Gestión de Ejecuciones' : 'Biblioteca de Procedimientos Estándar';
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-gray-50/50">
