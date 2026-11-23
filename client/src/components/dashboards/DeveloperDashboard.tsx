@@ -139,9 +139,13 @@ export const DeveloperDashboard = ({
 
     const procDetails = await getProcedureDetails(details.idProcedure);
 
+    // Si el procedimiento sigue en DRAFT, reanudar en modo creación para mostrar controles de edición
+    const resumeMode =
+      procDetails?.state === 'DRAFT' ? 'CREATION_AND_EXECUTION' : 'EXECUTE_EXISTING';
+
     setExecutionSession({
       isOpen: true,
-      mode: 'EXECUTE_EXISTING',
+      mode: resumeMode,
       procedure: procDetails,
       execution: details,
       steps: procDetails?.steps || [],

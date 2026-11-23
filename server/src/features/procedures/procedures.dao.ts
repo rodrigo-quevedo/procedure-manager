@@ -239,9 +239,8 @@ export class ProceduresDAO {
         const now = new Date().toISOString();
 
         await db.run('BEGIN TRANSACTION');
+        let procId = input.procedure.id;
         try {
-            let procId = input.procedure.id;
-
             if (procId) {
                 await db.run(
                     `UPDATE PROCEDIMIENTOS 
@@ -303,8 +302,8 @@ export class ProceduresDAO {
                     `INSERT INTO PASOS (id_element, id_procedure, name, description, step_order, is_completed) VALUES (?, ?, ?, ?, ?, ?)`,
                     stepId,
                     procId,
-                    step.name,
-                    step.description,
+                    step.name || '',
+                    step.description || '',
                     sIdx + 1,
                     step.isCompleted ? 1 : 0,
                 );
@@ -320,8 +319,8 @@ export class ProceduresDAO {
                         `INSERT INTO SECCIONES (id_element, id_step, name, description) VALUES (?, ?, ?, ?)`,
                         secId,
                         stepId,
-                        sec.name,
-                        sec.description,
+                        sec.name || '',
+                        sec.description || '',
                     );
 
                     for (let fIdx = 0; fIdx < (sec.fields || []).length; fIdx++) {
@@ -335,8 +334,8 @@ export class ProceduresDAO {
                             `INSERT INTO CAMPOS (id_element, id_section, field_type, content) VALUES (?, ?, ?, ?)`,
                             fieldId,
                             secId,
-                            field.fieldType,
-                            field.content,
+                            field.fieldType || 'TEXT',
+                            field.content || '',
                         );
                     }
                 }
@@ -348,7 +347,7 @@ export class ProceduresDAO {
             throw error;
         }
 
-        const details = await this.findById(input.procedure.id || (await db.get<{ id: number }>('SELECT last_insert_rowid() as id'))!.id);
+        const details = await this.findById(procId);
         return details!;
     }
 

@@ -54,10 +54,13 @@ export class ProceduresController {
             const { userId } = getAuthContext(res);
             const { procedure, steps } = req.body;
 
-            if (!procedure || !procedure.name || !procedure.idProject) {
-                badRequest(res, 'Datos de procedimiento incompletos.');
+            if (!procedure || !procedure.idProject) {
+                badRequest(res, 'Datos de procedimiento incompletos (idProject es obligatorio).');
                 return;
             }
+
+            procedure.name = (procedure.name && String(procedure.name).trim()) || 'Nuevo Procedimiento';
+            procedure.description = procedure.description || '';
 
             const saved = await proceduresService.saveProcedureHierarchy({
                 procedure,

@@ -16,10 +16,12 @@ interface StepDetailViewProps {
   onCreateStep?: () => void;
   onPauseExecution?: () => void;
   onCancelExecution?: () => void;
-  onCreateSection?: (stepId: number, title: string) => void;
+  onCreateSection?: (stepId: number, title: string, description?: string) => void;
   onUpdateSection?: (section: Section) => void;
+  onDeleteSection?: (sectionId: number) => void;
   onCreateField?: (sectionId: number, fieldType: FieldType, content: string) => void;
   onUpdateField?: (field: Field) => void;
+  onDeleteField?: (fieldId: number) => void;
   onSaveInput?: (fieldId: number, fieldType: FieldType, content: string) => void;
 }
 
@@ -39,17 +41,25 @@ export const StepDetailView: React.FC<StepDetailViewProps> = ({
   onCancelExecution,
   onCreateSection,
   onUpdateSection,
+  onDeleteSection,
   onCreateField,
   onUpdateField,
+  onDeleteField,
   onSaveInput,
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [stepName, setStepName] = useState(step.name);
+  const [stepName, setStepName] = useState(step.name || '');
   const [isEditingDesc, setIsEditingDesc] = useState(false);
-  const [stepDesc, setStepDesc] = useState(step.description);
+  const [stepDesc, setStepDesc] = useState(step.description || '');
+
+  React.useEffect(() => {
+    setStepName(step.name || '');
+    setStepDesc(step.description || '');
+  }, [step.id, step.name, step.description]);
 
   const [isCreatingSection, setIsCreatingSection] = useState(false);
   const [newSectionTitle, setNewSectionTitle] = useState('');
+  const [newSectionDesc, setNewSectionDesc] = useState('');
 
   const handleSaveTitle = () => {
     if (onUpdateStep) {
@@ -69,9 +79,10 @@ export const StepDetailView: React.FC<StepDetailViewProps> = ({
     e.preventDefault();
     if (!newSectionTitle.trim()) return;
     if (onCreateSection) {
-      onCreateSection(step.id, newSectionTitle.trim());
+      onCreateSection(step.id, newSectionTitle.trim(), newSectionDesc.trim());
     }
     setNewSectionTitle('');
+    setNewSectionDesc('');
     setIsCreatingSection(false);
   };
 
@@ -226,7 +237,9 @@ export const StepDetailView: React.FC<StepDetailViewProps> = ({
                 if (canEditDefinition) setIsEditingTitle(true);
               }}
             >
-              <span className="text-2xl font-bold text-gray-900 leading-none">{step.name}</span>
+              <span className={`text-2xl font-bold leading-none ${!step.name ? 'text-gray-400 italic font-normal' : 'text-gray-900'}`}>
+                {step.name || (canEditDefinition ? 'Sin título (clic para editar)' : 'Sin título')}
+              </span>
               {canEditDefinition && (
                 <button
                   type="button"
@@ -293,7 +306,9 @@ export const StepDetailView: React.FC<StepDetailViewProps> = ({
                 if (canEditDefinition) setIsEditingDesc(true);
               }}
             >
-              <p className="text-sm text-gray-600">{step.description || 'Sin descripción'}</p>
+              <p className={`text-sm leading-relaxed ${!step.description ? 'text-gray-400 italic' : 'text-gray-600'}`}>
+                {step.description || (canEditDefinition ? 'Sin descripción (clic para editar)' : 'Sin descripción')}
+              </p>
               {canEditDefinition && (
                 <button
                   type="button"
@@ -335,8 +350,10 @@ export const StepDetailView: React.FC<StepDetailViewProps> = ({
               isExecutable={isExecutable}
               canEditDefinition={canEditDefinition}
               onUpdateSection={onUpdateSection}
+              onDeleteSection={onDeleteSection}
               onCreateField={onCreateField}
               onUpdateField={onUpdateField}
+              onDeleteField={onDeleteField}
               onSaveInput={onSaveInput}
             />
           </div>
@@ -352,20 +369,36 @@ export const StepDetailView: React.FC<StepDetailViewProps> = ({
       {/* Inline Create Section Form */}
       {isCreatingSection && (
         <form onSubmit={handleCreateSectionSubmit} className="bg-white p-4 rounded-lg border border-red-200 shadow-xs space-y-3">
-          <label className="block text-xs font-bold text-red-600 uppercase">Título de la Sección</label>
-          <input
-            type="text"
-            value={newSectionTitle}
-            onChange={(e) => setNewSectionTitle(e.target.value)}
-            placeholder="Ej. Configuración de entorno, Despliegue de artefactos..."
-            className="w-full text-xs border border-gray-300 rounded p-2 outline-none focus:border-red-500"
-            required
-            autoFocus
-          />
+          <div>
+            <label className="block text-xs font-bold text-red-600 uppercase mb-1">Título de la Sección</label>
+            <input
+              type="text"
+              value={newSectionTitle}
+              onChange={(e) => setNewSectionTitle(e.target.value)}
+              placeholder="Ej. Configuración de entorno, Despliegue de artefactos..."
+              className="w-full text-xs border border-gray-300 rounded p-2 outline-none focus:border-red-500"
+              required
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Descripción de la Sección (opcional)</label>
+            <textarea
+              value={newSectionDesc}
+              onChange={(e) => setNewSectionDesc(e.target.value)}
+              placeholder="Descripción o instrucciones para esta sección..."
+              rows={2}
+              className="w-full text-xs border border-gray-300 rounded p-2 outline-none focus:border-red-500"
+            />
+          </div>
           <div className="flex justify-end gap-2">
             <button
               type="button"
-              onClick={() => setIsCreatingSection(false)}
+              onClick={() => {
+                setIsCreatingSection(false);
+                setNewSectionTitle('');
+                setNewSectionDesc('');
+              }}
               className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700"
             >
               Cancelar
