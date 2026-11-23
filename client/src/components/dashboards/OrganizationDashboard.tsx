@@ -32,6 +32,7 @@ export const OrganizationDashboard = ({
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [selectedMember, setSelectedMember] = useState<User | null>(null);
   const [isCreatingMember, setIsCreatingMember] = useState(false);
+  const [projectCreateTrigger, setProjectCreateTrigger] = useState(0);
 
   // Confirmation modal state for enable/disable member
   const [confirmModal, setConfirmModal] = useState<{
@@ -127,7 +128,6 @@ export const OrganizationDashboard = ({
       id: 'MEMBERS',
       label: 'Miembros',
       icon: <Users className="w-4 h-4" />,
-      badge: members.length > 0 ? members.length : undefined,
     },
   ];
 
@@ -175,15 +175,23 @@ export const OrganizationDashboard = ({
             activeId={activeTab}
             onSelect={handleSelectTab}
             actionButton={
-              activeTab === 'MEMBERS'
+              activeTab === 'PROJECTS'
                 ? {
-                  label: 'Nuevo Miembro',
-                  icon: <Plus className="w-3.5 h-3.5 stroke-[2.5]" />,
-                  onClick: () => {
-                    setSelectedMember(null);
-                    setIsCreatingMember(true);
-                  },
-                }
+                    label: 'Crear Proyecto',
+                    icon: <Plus className="w-3.5 h-3.5 stroke-[2.5]" />,
+                    onClick: () => {
+                      setProjectCreateTrigger((prev) => prev + 1);
+                    },
+                  }
+                : activeTab === 'MEMBERS'
+                ? {
+                    label: 'Nuevo Miembro',
+                    icon: <Plus className="w-3.5 h-3.5 stroke-[2.5]" />,
+                    onClick: () => {
+                      setSelectedMember(null);
+                      setIsCreatingMember(true);
+                    },
+                  }
                 : undefined
             }
           />
@@ -196,6 +204,7 @@ export const OrganizationDashboard = ({
                   organizationId={organization.id}
                   actor={user}
                   onSuccess={showSuccessFeedback}
+                  createTrigger={projectCreateTrigger}
                 />
               )}
 

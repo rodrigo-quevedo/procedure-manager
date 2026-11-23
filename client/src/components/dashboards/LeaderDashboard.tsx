@@ -42,6 +42,7 @@ export const LeaderDashboard = ({
   const [procedures, setProcedures] = useState<Procedure[]>([]);
   const [executions, setExecutions] = useState<ExecutionListItem[]>([]);
   const [, setIsLoading] = useState(false);
+  const [projectCreateTrigger, setProjectCreateTrigger] = useState(0);
 
   // Creation and Execution Full Screen State (HU-007 / HU-009 / HU-011)
   const [executionSession, setExecutionSession] = useState<{
@@ -195,6 +196,27 @@ export const LeaderDashboard = ({
     },
   ];
 
+  const getActionButton = () => {
+    if (activeTab === 'PROJECTS') {
+      return {
+        label: 'Crear Proyecto',
+        icon: <Plus className="w-3.5 h-3.5 stroke-[2.5]" />,
+        onClick: () => {
+          setProjectCreateTrigger((prev) => prev + 1);
+        },
+      };
+    }
+    if (activeTab === 'EXECUTIONS' || activeTab === 'PROCEDURES') {
+      return {
+        label: 'Crear Procedimiento',
+        icon: <Plus className="w-3.5 h-3.5 stroke-[2.5]" />,
+        onClick: handleStartCreationAndExecution,
+      };
+    }
+    // Para 'EVALUATIONS' retorna undefined (se quita el botón)
+    return undefined;
+  };
+
   return (
     <div className="min-h-screen flex flex-col font-sans bg-gray-50/50">
       <NavbarHeader
@@ -220,11 +242,7 @@ export const LeaderDashboard = ({
             items={sidebarItems}
             activeId={activeTab}
             onSelect={(tab) => setActiveTab(tab)}
-            actionButton={{
-              label: 'Crear Procedimiento',
-              icon: <Plus className="w-3.5 h-3.5 stroke-[2.5]" />,
-              onClick: handleStartCreationAndExecution,
-            }}
+            actionButton={getActionButton()}
           />
 
           {/* Contenido centrado */}
@@ -236,6 +254,7 @@ export const LeaderDashboard = ({
                   organizationId={organization.id}
                   actor={user}
                   onSuccess={showSuccessFeedback}
+                  createTrigger={projectCreateTrigger}
                 />
               )}
 
